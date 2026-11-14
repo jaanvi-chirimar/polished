@@ -2,26 +2,26 @@ import { db } from '@/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 
 /** Build a display name from first/last, with a fallback */
-export function buildFullName(
-  firstName?: string,
-  lastName?: string,
-  fallback = 'Unknown'
-): string {
-  const first = firstName || '';
-  const last = lastName || '';
-  return first && last ? `${first} ${last}`.trim() : first || last || fallback;
+export function buildFullName(firstName?: string, lastName?: string, fallback = 'Unknown'): string {
+  return [firstName, lastName].filter(Boolean).join(' ') || fallback;
 }
+
+// Names rarely change, so each user's name is fetched once per app session.
+const nameCache = new Map<string, Promise<{ firstName?: string; lastName?: string } | null>>();
 
 /** Fetch a user's display name from Firestore by uid */
 export async function getUserName(uid: string, fallback = 'Unknown'): Promise<string> {
-  try {
-    const snap = await getDoc(doc(db, 'users', uid));
-    if (snap.exists()) {
-      const d = snap.data();
-      return buildFullName(d.firstName, d.lastName, fallback);
-    }
-  } catch (_) {}
-  return fallback;
+  if (!nameCache.has(uid)) {
+    const request = getDoc(doc(db, 'users', uid))
+      .then((snap) => (snap.exists() ? (snap.data() as { firstName?: string; lastName?: string }) : null))
+      .catch(() => {
+        nameCache.delete(uid); // let a later call retry
+        return null;
+      });
+    nameCache.set(uid, request);
+  }
+  const data = await nameCache.get(uid);
+  return buildFullName(data?.firstName, data?.lastName, fallback);
 }
 
 /** Format a Date as "Mon, Jan 5 at 2:30 PM" */
@@ -31,4 +31,9 @@ export function formatDateTime(dt: Date): string {
     month: 'short',
     day: 'numeric',
   })} at ${dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+}
+
+/** Adds the item if missing, removes it if present. */
+export function toggleInList<T>(list: T[], item: T): T[] {
+  return list.includes(item) ? list.filter((i) => i !== item) : [...list, item];
 }

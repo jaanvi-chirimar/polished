@@ -12,17 +12,15 @@ import {
 } from "@/constants/nailTechOptions";
 import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import { buildFullName, formatDateTime, getUserName } from "@/lib/utils";
+import { db } from "@/firebase/config";
+import { byDateAsc, subscribeToAppointments } from "@/lib/appointments";
+import { Tech, toTech } from "@/lib/techs";
+import { dayName } from "@/lib/time";
+import { formatDateTime } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
-import {
-  collection,
-  DocumentData,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -34,7 +32,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { db } from "../../firebase/config";
 
 type TechStatus = {
   nextAppointment: { clientName: string; dateTime: Date } | null;
@@ -48,34 +45,7 @@ const SERVICE_FILTER_OPTIONS = [
   ...NAIL_TECH_DESIGNS.slice(0, 4),
 ] as const;
 
-const WEEKDAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-type Tech = {
-  id: string;
-  name: string;
-  location: string;
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string | null;
-  nailTechProfile?: {
-    location?: string;
-    bio?: string;
-    portfolio?: string[];
-    tools?: string[];
-    designs?: string[];
-    availabilities?: {
-      schedule: Record<string, Array<{ start: string; end: string }>>;
-    };
-  };
-};
+const isAvailableOn = (tech: Tech, day: string) => !!tech.profile.availabilities?.schedule?.[day]?.length;
 
 function TechStatusCard({ techStatus }: { techStatus: TechStatus }) {
   return (
@@ -115,7 +85,7 @@ function TechStatusCard({ techStatus }: { techStatus: TechStatus }) {
 }
 
 export default function HomeScreen() {
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, isTech, isCustomer } = useAuth();
   const [techs, setTechs] = useState<Tech[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -129,110 +99,38 @@ export default function HomeScreen() {
     confirmedCount: 0,
   });
 
-  const isTech = userProfile?.roles?.includes("nailTech") ?? false;
-  const isCustomer = userProfile?.roles?.includes("user") ?? false;
   const isTechOnly = isTech && !isCustomer;
 
-  // Tech appointments: next upcoming or pending requests (for tech-only or both)
+  // Tech dashboard numbers: pending requests, upcoming confirmed, and the next appointment
   useEffect(() => {
     if (!user?.uid || !isTech) {
       setTechStatus({ nextAppointment: null, pendingCount: 0, confirmedCount: 0 });
       return;
     }
-    const q = query(
-      collection(db, "appointments"),
-      where("techId", "==", user.uid)
-    );
-    const unsubscribe = onSnapshot(
-      q,
-      async (snapshot) => {
-        const now = new Date();
-        const docs = snapshot.docs
-          .map((d) => {
-            const data = d.data();
-            const dt = data.dateTime?.toDate?.() ?? null;
-            return {
-              id: d.id,
-              clientId: data.clientId,
-              dateTime: dt,
-              status: data.status || "pending",
-            };
-          })
-          .filter((a) => a.dateTime) as {
-          id: string;
-          clientId: string;
-          dateTime: Date;
-          status: string;
-        }[];
-
-        const pending = docs.filter((a) => a.status === "pending");
-        const confirmed = docs.filter(
-          (a) => a.dateTime >= now && a.status === "confirmed"
-        );
-        const upcoming = confirmed.sort(
-          (a, b) => a.dateTime.getTime() - b.dateTime.getTime()
-        );
-        const next = upcoming[0] ?? null;
-
-        let nextAppointment: TechStatus["nextAppointment"] = null;
-        if (next) {
-          const clientName = await getUserName(next.clientId, "Client");
-          nextAppointment = { clientName, dateTime: next.dateTime };
-        }
-        setTechStatus({ nextAppointment, pendingCount: pending.length, confirmedCount: confirmed.length });
-      },
-      (err) => console.error("Home tech status:", err)
-    );
-    return () => unsubscribe();
+    return subscribeToAppointments("tech", user.uid, (appts) => {
+      const now = new Date();
+      const upcoming = appts.filter((a) => a.dateTime >= now && a.status === "confirmed").sort(byDateAsc);
+      const next = upcoming[0];
+      setTechStatus({
+        nextAppointment: next ? { clientName: next.otherName, dateTime: next.dateTime } : null,
+        pendingCount: appts.filter((a) => a.status === "pending").length,
+        confirmedCount: upcoming.length,
+      });
+    });
   }, [user?.uid, isTech]);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/auth' as any);
-    }
-  }, [user, authLoading]);
-  
-  // Load techs only when user is a customer (discovery content)
+  // Customers see every tech (filtered on the phone below)
   useEffect(() => {
     if (!user || !isCustomer) {
       setTechs([]);
       setLoading(false);
       return;
     }
-
-    const q = query(
-      collection(db, "users"),
-      where("roles", "array-contains", "nailTech")
-    );
-    
-    const unsubscribe = onSnapshot(
+    const q = query(collection(db, "users"), where("roles", "array-contains", "nailTech"));
+    return onSnapshot(
       q,
       (snapshot) => {
-        const list: Tech[] = snapshot.docs.map((doc) => {
-          const data = doc.data() as DocumentData;
-          
-          const name = buildFullName(data.firstName, data.lastName, "Unnamed Tech");
-          
-          // Get location from nailTechProfile or user location
-          const location = data.nailTechProfile?.location || data.location || "";
-
-          return {
-            id: doc.id,
-            name,
-            location,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            phoneNumber: data.phoneNumber,
-            nailTechProfile: {
-              ...data.nailTechProfile,
-              tools: data.nailTechProfile?.tools ?? [],
-              designs: data.nailTechProfile?.designs ?? [],
-            },
-          };
-        });
-
-        setTechs(list);
+        setTechs(snapshot.docs.map((d) => toTech(d.id, d.data())));
         setLoading(false);
       },
       (error) => {
@@ -240,47 +138,29 @@ export default function HomeScreen() {
         setLoading(false);
       }
     );
-
-    // Clean up the listener when the component unmounts
-    return unsubscribe;
   }, [user, isCustomer]);
 
-  const todayWeekday = WEEKDAYS[new Date().getDay()];
+  const today = dayName(new Date());
 
   const filteredTechs = useMemo(() => {
-    let list = techs;
     const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          (t.location && t.location.toLowerCase().includes(q))
-      );
-    }
-    if (filterLocation) {
-      list = list.filter((t) => t.location === filterLocation);
-    }
-    if (filterService && filterService !== "All") {
-      list = list.filter((t) => {
-        const tools = t.nailTechProfile?.tools ?? [];
-        const designs = t.nailTechProfile?.designs ?? [];
-        return tools.includes(filterService) || designs.includes(filterService);
-      });
-    }
-    if (filterAvailableToday) {
-      list = list.filter((t) =>
-        Object.keys(t.nailTechProfile?.availabilities?.schedule ?? {}).includes(todayWeekday)
-      );
-    }
-    return list;
-  }, [techs, searchQuery, filterLocation, filterService, filterAvailableToday]);
+    return techs.filter((t) => {
+      if (q && !t.name.toLowerCase().includes(q) && !t.location.toLowerCase().includes(q)) return false;
+      if (filterLocation && t.location !== filterLocation) return false;
+      if (filterService !== "All") {
+        const services = [...(t.profile.tools ?? []), ...(t.profile.designs ?? [])];
+        if (!services.includes(filterService)) return false;
+      }
+      if (filterAvailableToday && !isAvailableOn(t, today)) return false;
+      return true;
+    });
+  }, [techs, searchQuery, filterLocation, filterService, filterAvailableToday, today]);
 
   const handleProfilePress = () => {
     router.push("/(tabs)/profile" as any);
   };
   
-  // Show loading or nothing if not authenticated (after all hooks)
-  if (authLoading || !user) {
+  if (!user) {
     return null;
   }
 
@@ -313,7 +193,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.techGreeting}>{greeting}, {firstName} 👋</Text>
-            <Text style={styles.techGreetingSub}>Here's your overview</Text>
+            <Text style={styles.techGreetingSub}>Here’s your overview</Text>
           </View>
           <TouchableOpacity onPress={handleProfilePress} style={styles.profileButton} activeOpacity={0.7}>
             <Ionicons name="person-circle-outline" size={32} color={Polish.colors.text} />
@@ -338,7 +218,7 @@ export default function HomeScreen() {
         ) : (
           <View style={styles.techAllSetCard}>
             <Ionicons name="checkmark-circle-outline" size={24} color={Polish.colors.success} />
-            <Text style={styles.techAllSetText}>No upcoming appointments — you're all clear!</Text>
+            <Text style={styles.techAllSetText}>No upcoming appointments — you’re all clear!</Text>
           </View>
         )}
 
@@ -367,7 +247,7 @@ export default function HomeScreen() {
       <View style={[styles.container, styles.center]}>
         <Text style={styles.title}>Nail Techs Near You</Text>
         <Text style={styles.emptyText}>
-          No nail techs found. Users with the "nailTech" role will appear here.
+          No nail techs yet. Check back soon!
         </Text>
       </View>
     );
@@ -563,8 +443,7 @@ export default function HomeScreen() {
           </View>
         }
         renderItem={({ item }) => {
-          const availableToday =
-            Object.keys(item.nailTechProfile?.availabilities?.schedule ?? {}).includes(todayWeekday);
+          const availableToday = isAvailableOn(item, today);
           return (
             <Link
               href={{
@@ -574,9 +453,9 @@ export default function HomeScreen() {
               asChild
             >
               <TouchableOpacity style={styles.card} activeOpacity={0.85}>
-                {item.nailTechProfile?.portfolio?.[0] ? (
+                {item.profile.portfolio?.[0] ? (
                   <Image
-                    source={{ uri: item.nailTechProfile.portfolio[0] }}
+                    source={{ uri: item.profile.portfolio[0] }}
                     style={styles.cardImage}
                     contentFit="cover"
                   />

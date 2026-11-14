@@ -1,14 +1,14 @@
-import {
-  NAIL_TECH_DESIGNS,
-  NAIL_TECH_TOOLS,
-  LOCATION_OPTIONS,
-} from '@/constants/nailTechOptions';
+import { ChipSelect, LocationPicker } from '@/components/profile/ProfileFields';
+import { formStyles as fs } from '@/components/profile/formStyles';
+import { NAIL_TECH_DESIGNS, NAIL_TECH_TOOLS } from '@/constants/nailTechOptions';
 import { Polish } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/firebase/config';
+import { formFromProfile, useProfileForm } from '@/lib/profileForm';
+import { buildFullName } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -23,72 +23,68 @@ import {
   View,
 } from 'react-native';
 
+/** "Become a Nail Tech" application. Approving it (adding the nailTech role) happens outside the app. */
 export default function ApplyScreen() {
-  const { user, userProfile } = useAuth();
-  const [step, setStep] = useState<'form' | 'submitted'>('form');
+  const { user, userProfile, saveProfile } = useAuth();
+  const { form, set } = useProfileForm(formFromProfile(userProfile));
+  const [whyApply, setWhyApply] = useState('');
+  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [bio, setBio] = useState('');
-  const [location, setLocation] = useState('');
-  const [showOtherLocation, setShowOtherLocation] = useState(false);
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [selectedDesigns, setSelectedDesigns] = useState<string[]>([]);
-  const [instagramHandle, setInstagramHandle] = useState(userProfile?.instagramHandle || '');
-  const [whyApply, setWhyApply] = useState('');
-
-  const toggleItem = (list: string[], item: string, setter: (v: string[]) => void) => {
-    setter(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
-  };
-
   const handleSubmit = async () => {
-    if (!location) {
+    if (!form.location.trim()) {
       Alert.alert('Required', 'Please select your location.');
       return;
     }
-    if (!bio.trim()) {
+    if (!form.bio.trim()) {
       Alert.alert('Required', 'Please tell clients a bit about yourself.');
       return;
     }
-    if (!user?.uid) return;
+    if (!user || !userProfile) return;
 
-    // Check if already applied
-    const existing = await getDoc(doc(db, 'applications', user.uid));
-    if (existing.exists()) {
-      const status = existing.data().status;
-      if (status === 'pending') {
-        Alert.alert('Already applied', 'Your application is still under review.');
-        return;
-      }
-      if (status === 'approved') {
-        Alert.alert('Already approved', 'You are already a nail tech on Polish!');
-        return;
-      }
+    // One application per person, stored at applications/{uid}.
+    const applicationRef = doc(db, 'applications', user.uid);
+    const existing = await getDoc(applicationRef);
+    const status = existing.exists() ? existing.data().status : null;
+    if (status === 'pending') {
+      Alert.alert('Already applied', 'Your application is still under review.');
+      return;
+    }
+    if (status === 'approved') {
+      Alert.alert('Already approved', 'You are already a nail tech on Polish!');
+      return;
     }
 
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'applications'), {
+      const bio = form.bio.trim();
+      const location = form.location.trim();
+      await setDoc(applicationRef, {
         uid: user.uid,
-        name: [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' '),
+        name: buildFullName(userProfile.firstName, userProfile.lastName, ''),
         email: user.email,
-        bio: bio.trim(),
+        bio,
         location,
-        tools: selectedTools,
-        designs: selectedDesigns,
-        instagramHandle: instagramHandle.trim() || null,
+        tools: form.tools,
+        designs: form.designs,
+        instagramHandle: form.instagramHandle.trim() || null,
         whyApply: whyApply.trim() || null,
         status: 'pending',
         createdAt: serverTimestamp(),
       });
-      // Also pre-fill nailTechProfile data so it's ready when approved
-      await updateDoc(doc(db, 'users', user.uid), {
-        'nailTechProfile.bio': bio.trim(),
-        'nailTechProfile.location': location,
-        ...(selectedTools.length > 0 ? { 'nailTechProfile.tools': selectedTools } : {}),
-        ...(selectedDesigns.length > 0 ? { 'nailTechProfile.designs': selectedDesigns } : {}),
-        ...(instagramHandle.trim() ? { instagramHandle: instagramHandle.trim() } : {}),
+      // Pre-fill the tech profile so it's ready if they're approved.
+      await saveProfile({
+        ...userProfile,
+        instagramHandle: form.instagramHandle.trim() || userProfile.instagramHandle,
+        nailTechProfile: {
+          ...userProfile.nailTechProfile,
+          bio,
+          location,
+          tools: form.tools.length ? form.tools : undefined,
+          designs: form.designs.length ? form.designs : undefined,
+        },
       });
-      setStep('submitted');
+      setSubmitted(true);
     } catch (err) {
       console.error('Application error:', err);
       Alert.alert('Error', 'Failed to submit. Please try again.');
@@ -97,7 +93,8 @@ export default function ApplyScreen() {
     }
   };
 
-  if (step === 'submitted') {
+  if (submitted) {
+
     return (
       <View style={styles.container}>
         <View style={styles.successContainer}>
@@ -106,7 +103,7 @@ export default function ApplyScreen() {
           </View>
           <Text style={styles.successTitle}>Application submitted!</Text>
           <Text style={styles.successBody}>
-            We'll review your application and get back to you soon. Once approved, your profile will appear in the directory.
+            We’ll review your application and get back to you soon. Once approved, your profile will appear in the directory.
           </Text>
           <TouchableOpacity style={styles.doneButton} onPress={() => router.back()} activeOpacity={0.85}>
             <Text style={styles.doneButtonText}>Done</Text>
@@ -128,41 +125,12 @@ export default function ApplyScreen() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>
-          Tell us about yourself and we'll review your application within a few days.
+          Tell us about yourself and we’ll review your application within a few days.
         </Text>
 
         <View style={styles.section}>
           <Text style={styles.label}>Location *</Text>
-          <View style={styles.chipRow}>
-            {LOCATION_OPTIONS.map((loc) => (
-              <TouchableOpacity
-                key={loc}
-                style={[styles.chip, (loc === 'Other' ? showOtherLocation : location === loc) && styles.chipSelected]}
-                onPress={() => {
-                  if (loc === 'Other') {
-                    setShowOtherLocation(true);
-                    setLocation('');
-                  } else {
-                    setShowOtherLocation(false);
-                    setLocation(location === loc ? '' : loc);
-                  }
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, (loc === 'Other' ? showOtherLocation : location === loc) && styles.chipTextSelected]}>{loc}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          {showOtherLocation && (
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your location"
-              value={location}
-              onChangeText={setLocation}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-          )}
+          <LocationPicker form={form} set={set} />
         </View>
 
         <View style={styles.section}>
@@ -172,8 +140,8 @@ export default function ApplyScreen() {
             style={[styles.input, styles.textArea]}
             placeholder="e.g. I'm a self-taught nail artist specializing in minimalist gel designs..."
             placeholderTextColor={Polish.colors.textMuted}
-            value={bio}
-            onChangeText={setBio}
+            value={form.bio}
+            onChangeText={(v) => set('bio', v)}
             multiline
             numberOfLines={4}
           />
@@ -185,10 +153,10 @@ export default function ApplyScreen() {
             style={styles.input}
             placeholder="@yourhandle"
             placeholderTextColor={Polish.colors.textMuted}
-            value={instagramHandle}
+            value={form.instagramHandle}
             onChangeText={(text) => {
-              if (text === '' || text === '@') { setInstagramHandle(''); return; }
-              setInstagramHandle(text.startsWith('@') ? text : '@' + text);
+              const handle = text.replace(/^@+/, '');
+              set('instagramHandle', handle ? `@${handle}` : '');
             }}
             autoCapitalize="none"
             autoCorrect={false}
@@ -198,34 +166,12 @@ export default function ApplyScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>Services / Techniques</Text>
           <Text style={styles.hint}>Select all that apply.</Text>
-          <View style={styles.chipRow}>
-            {NAIL_TECH_TOOLS.map((tool) => (
-              <TouchableOpacity
-                key={tool}
-                style={[styles.chip, selectedTools.includes(tool) && styles.chipSelected]}
-                onPress={() => toggleItem(selectedTools, tool, setSelectedTools)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, selectedTools.includes(tool) && styles.chipTextSelected]}>{tool}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <ChipSelect options={NAIL_TECH_TOOLS} selected={form.tools} onChange={(v) => set('tools', v)} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Design Styles</Text>
-          <View style={styles.chipRow}>
-            {NAIL_TECH_DESIGNS.map((design) => (
-              <TouchableOpacity
-                key={design}
-                style={[styles.chip, selectedDesigns.includes(design) && styles.chipSelected]}
-                onPress={() => toggleItem(selectedDesigns, design, setSelectedDesigns)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipText, selectedDesigns.includes(design) && styles.chipTextSelected]}>{design}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <ChipSelect options={NAIL_TECH_DESIGNS} selected={form.designs} onChange={(v) => set('designs', v)} />
         </View>
 
         <View style={styles.section}>
@@ -284,28 +230,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: Polish.spacing.xxl },
   label: { ...Polish.typography.bodyMedium, color: Polish.colors.text, marginBottom: Polish.spacing.sm },
   hint: { ...Polish.typography.caption, color: Polish.colors.textMuted, marginBottom: Polish.spacing.md },
-  input: {
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.lg,
-    ...Polish.typography.body,
-    backgroundColor: Polish.colors.surface,
-    color: Polish.colors.text,
-  },
+  input: { ...fs.input, marginBottom: 0, color: Polish.colors.text },
   textArea: { minHeight: 96, textAlignVertical: 'top' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.sm },
-  chip: {
-    paddingHorizontal: Polish.spacing.md,
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.xl,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
-  },
-  chipSelected: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  chipText: { ...Polish.typography.caption, color: Polish.colors.textSecondary, fontWeight: '500' },
-  chipTextSelected: { color: '#fff' },
   submitButton: {
     backgroundColor: Polish.colors.primary,
     borderRadius: Polish.radius.lg,

@@ -1,19 +1,12 @@
 import { APPOINTMENT_TYPES } from "@/constants/nailTechOptions";
 import { Polish } from "@/constants/theme";
-import { useAuth } from "@/contexts/AuthContext";
+import { PricingTierKey, useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
+import { enabledTiers, fetchTech, Tech, usesPricingTiers } from "@/lib/techs";
+import { dateAtTime, dayName, formatTime, generateSlots } from "@/lib/time";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  getDocFromServer,
-  query,
-  Timestamp,
-  where,
-} from "firebase/firestore";
+import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -27,45 +20,28 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type PricingTier = { name: string; description?: string; price: number; enabled: boolean };
-type TimeBlock = { start: string; end: string };
+const DAYS_AHEAD = 21;
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-function formatTime(hhmm: string): string {
-  const [h, m] = hhmm.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
-}
-
-function generateSlots(blocks: TimeBlock[]): string[] {
-  const slots: string[] = [];
-  for (const block of blocks) {
-    const [sh, sm] = block.start.split(':').map(Number);
-    const [eh, em] = block.end.split(':').map(Number);
-    let cur = sh * 60 + sm;
-    const end = eh * 60 + em;
-    while (cur < end) {
-      const h = Math.floor(cur / 60);
-      const m = cur % 60;
-      slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-      cur += 30;
-    }
-  }
-  return slots;
-}
-
+/** Today plus the next `count - 1` days, at midnight. */
 function getUpcomingDates(count: number): Date[] {
-  const dates: Date[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < count; i++) {
+  return Array.from({ length: count }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    dates.push(d);
-  }
-  return dates;
+    return d;
+  });
+}
+
+/** Monday 00:00 → Sunday 23:59 of the week containing `date`. */
+function weekRange(date: Date): [Date, Date] {
+  const start = new Date(date);
+  start.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return [start, end];
 }
 
 export default function BookScreen() {
@@ -74,95 +50,49 @@ export default function BookScreen() {
   const { id, name } = useLocalSearchParams<{ id?: string; name?: string }>();
   const router = useRouter();
 
+  const [tech, setTech] = useState<Tech | null>(null);
   const [note, setNote] = useState("");
   const [altTimeRequest, setAltTimeRequest] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [techName, setTechName] = useState<string | null>(name ?? null);
-  const [techTools, setTechTools] = useState<string[]>([]);
-  const [techDesigns, setTechDesigns] = useState<string[]>([]);
-  const [techUsePricingTiers, setTechUsePricingTiers] = useState(true);
-  const [techPricingTiers, setTechPricingTiers] = useState<PricingTier[]>([]);
-  const [techPricingDescription, setTechPricingDescription] = useState('');
-  const [techReschedulePolicy, setTechReschedulePolicy] = useState("");
-  const [techLatePolicy, setTechLatePolicy] = useState("");
-  const [techMaxPerWeek, setTechMaxPerWeek] = useState(0);
-  const [techRemovalAddOn, setTechRemovalAddOn] = useState<{ enabled: boolean; price: number } | null>(null);
   const [addRemoval, setAddRemoval] = useState(false);
-  const [techSchedule, setTechSchedule] = useState<Record<string, TimeBlock[]>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [appointmentType, setAppointmentType] = useState<string>("");
-  const [selectedTierKey, setSelectedTierKey] = useState<string>("");
+  const [appointmentType, setAppointmentType] = useState("");
+  const [selectedTierKey, setSelectedTierKey] = useState<PricingTierKey | "">("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const upcomingDates = useMemo(() => getUpcomingDates(21), []);
+  const upcomingDates = useMemo(() => getUpcomingDates(DAYS_AHEAD), []);
 
   useEffect(() => {
+    if (!id) return;
     let mounted = true;
-    async function loadTech() {
-      if (!id) { setTechName(name ?? null); return; }
-      if (name) setTechName(name);
-      try {
-        const snap = await getDocFromServer(doc(db, "users", id));
-        if (!mounted) return;
-        if (snap.exists()) {
-          const data = snap.data() as Record<string, unknown>;
-          const firstName = (data.firstName as string) || "";
-          const lastName = (data.lastName as string) || "";
-          setTechName(
-            firstName && lastName
-              ? `${firstName} ${lastName}`.trim()
-              : firstName || lastName || `Tech ${id}`
-          );
-          const np = data.nailTechProfile as Record<string, unknown> | undefined;
-          if (np) {
-            setTechTools(Array.isArray(np.tools) ? (np.tools as string[]) : []);
-            setTechDesigns(Array.isArray(np.designs) ? (np.designs as string[]) : []);
-            const usesTiers = np.usePricingTiers !== false;
-            setTechUsePricingTiers(usesTiers);
-            setTechPricingDescription((np.pricingDescription as string) ?? '');
-            const pt = np.pricingTiers as Record<string, PricingTier> | undefined;
-            if (usesTiers && pt) {
-              const enabled = (['tier1', 'tier2', 'tier3'] as const)
-                .map(k => pt[k])
-                .filter((t): t is PricingTier => !!t?.enabled);
-              setTechPricingTiers(enabled);
-            }
-            const pol = np.policies as { reschedule?: string; late?: string } | undefined;
-            setTechReschedulePolicy(pol?.reschedule ?? '');
-            setTechLatePolicy(pol?.late ?? '');
-            setTechMaxPerWeek((np.maxAppointmentsPerWeek as number) || 0);
-            const ra = np.removalAddOn as { enabled: boolean; price: number } | undefined;
-            setTechRemovalAddOn(ra?.enabled ? ra : null);
-            const avail = np.availabilities as { schedule?: Record<string, TimeBlock[]> } | undefined;
-            setTechSchedule(avail?.schedule ?? {});
-          }
-        } else {
-          setTechName(`Tech ${id}`);
-        }
-      } catch {
-        if (!mounted) return;
-        setTechName(`Tech ${id}`);
-      }
-    }
-    loadTech();
+    fetchTech(id)
+      .then((t) => { if (mounted) setTech(t); })
+      .catch(() => {});
     return () => { mounted = false; };
-  }, [id, name]);
+  }, [id]);
+
+  const techName = tech?.name ?? name ?? "this tech";
+  const profile = tech?.profile;
+  const techSchedule = useMemo(() => profile?.availabilities?.schedule ?? {}, [profile]);
+  const techTools = profile?.tools ?? [];
+  const techDesigns = profile?.designs ?? [];
+  const techUsePricingTiers = usesPricingTiers(profile);
+  const techPricingTiers = enabledTiers(profile);
+  const techPricingDescription = profile?.pricingDescription ?? "";
+  const techRemovalAddOn = profile?.removalAddOn?.enabled ? profile.removalAddOn : null;
+  const techMaxPerWeek = profile?.maxAppointmentsPerWeek ?? 0;
+  const techReschedulePolicy = profile?.policies?.reschedule;
+  const techLatePolicy = profile?.policies?.late;
 
   const availableSlots = useMemo(() => {
     if (!selectedDate) return [];
-    const dayName = DAY_NAMES[selectedDate.getDay()];
-    const blocks = techSchedule[dayName];
-    if (!blocks || blocks.length === 0) return [];
-    return generateSlots(blocks);
+    // Skip slots that have already started today.
+    const now = new Date();
+    return generateSlots(techSchedule[dayName(selectedDate)] ?? []).filter(
+      (slot) => dateAtTime(slot, selectedDate) > now
+    );
   }, [selectedDate, techSchedule]);
-
-  function buildDateTime(date: Date, slot: string): Date {
-    const [h, m] = slot.split(':').map(Number);
-    const dt = new Date(date);
-    dt.setHours(h, m, 0, 0);
-    return dt;
-  }
 
   async function handleConfirm() {
     if (!id) { Alert.alert("Error", "No nail tech selected."); return; }
@@ -170,35 +100,27 @@ export default function BookScreen() {
     if (!selectedDate || !selectedSlot) { Alert.alert("Select time", "Please choose a date and time slot."); return; }
     if (!user?.uid) { Alert.alert("Sign in required", "Please sign in to book."); return; }
 
-    const dateTime = buildDateTime(selectedDate, selectedSlot);
+    const dateTime = dateAtTime(selectedSlot, selectedDate);
 
     try {
       setSubmitting(true);
 
+      // Weekly limit: count the tech's active bookings in the week being booked.
       if (techMaxPerWeek > 0) {
-        const now = new Date();
-        const day = now.getDay();
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-        startOfWeek.setHours(0, 0, 0, 0);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
-
-        const q = query(
-          collection(db, "appointments"),
-          where("techId", "==", id),
-          where("dateTime", ">=", Timestamp.fromDate(startOfWeek)),
-          where("dateTime", "<=", Timestamp.fromDate(endOfWeek))
+        const [startOfWeek, endOfWeek] = weekRange(dateTime);
+        const snap = await getDocs(
+          query(
+            collection(db, "appointments"),
+            where("techId", "==", id),
+            where("dateTime", ">=", Timestamp.fromDate(startOfWeek)),
+            where("dateTime", "<=", Timestamp.fromDate(endOfWeek))
+          )
         );
-        const snap = await getDocs(q);
-        const activeCount = snap.docs.filter(d => d.data().status !== "declined").length;
+        const activeCount = snap.docs.filter((d) => d.data().status !== "declined").length;
         if (activeCount >= techMaxPerWeek) {
-          const nextWeek = new Date(startOfWeek);
-          nextWeek.setDate(startOfWeek.getDate() + 7);
           Alert.alert(
-            "Fully booked this week",
-            `${techName ?? "This tech"} is fully booked for this week. Try the week of ${nextWeek.toLocaleDateString(undefined, { month: "short", day: "numeric" })}.`
+            "Fully booked that week",
+            `${techName} is fully booked for the week of ${startOfWeek.toLocaleDateString(undefined, { month: "short", day: "numeric" })}. Try another week.`
           );
           return;
         }
@@ -213,18 +135,11 @@ export default function BookScreen() {
         appointmentType,
         ...(selectedTierKey ? { pricingTier: selectedTierKey } : {}),
         ...(altTimeRequest.trim() ? { altTimeRequest: altTimeRequest.trim() } : {}),
-        ...(addRemoval ? { addOns: ['removal'], removalPrice: techRemovalAddOn?.price } : {}),
+        ...(addRemoval && techRemovalAddOn ? { addOns: ["removal"], removalPrice: techRemovalAddOn.price } : {}),
         createdAt: Timestamp.now(),
       });
 
       setConfirmed(true);
-      setNote("");
-      setAltTimeRequest("");
-      setSelectedDate(null);
-      setSelectedSlot(null);
-      setAppointmentType("");
-      setSelectedTierKey("");
-      setAddRemoval(false);
       setTimeout(() => router.back(), 800);
     } catch (err) {
       console.error("Error creating appointment:", err);
@@ -254,7 +169,7 @@ export default function BookScreen() {
             <Ionicons name="calendar-outline" size={28} color={Polish.colors.primary} />
           </View>
           <Text style={styles.title}>
-            Book with {techName ?? (id ? `Tech ${id}` : "Unknown")}
+            Book with {tech?.name ?? name ?? "Nail Tech"}
           </Text>
         </View>
 
@@ -299,27 +214,24 @@ export default function BookScreen() {
           techPricingTiers.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.label}>Select a tier</Text>
-              {techPricingTiers.map((tier, i) => {
-                const key = `tier${i + 1}`;
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    style={[styles.tierOption, selectedTierKey === key && styles.tierOptionSelected]}
-                    onPress={() => setSelectedTierKey(selectedTierKey === key ? "" : key)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.tierName, selectedTierKey === key && styles.tierNameSelected]}>
-                        {tier.name}
-                      </Text>
-                      {tier.description ? <Text style={styles.tierDesc}>{tier.description}</Text> : null}
-                    </View>
-                    <Text style={[styles.tierPrice, selectedTierKey === key && styles.tierPriceSelected]}>
-                      ${tier.price}
+              {techPricingTiers.map(({ key, tier }) => (
+                <TouchableOpacity
+                  key={key}
+                  style={[styles.tierOption, selectedTierKey === key && styles.tierOptionSelected]}
+                  onPress={() => setSelectedTierKey(selectedTierKey === key ? "" : key)}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.tierName, selectedTierKey === key && styles.tierNameSelected]}>
+                      {tier.name}
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                    {tier.description ? <Text style={styles.tierDesc}>{tier.description}</Text> : null}
+                  </View>
+                  <Text style={[styles.tierPrice, selectedTierKey === key && styles.tierPriceSelected]}>
+                    ${tier.price}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           )
         ) : (
@@ -352,12 +264,12 @@ export default function BookScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>Select a date</Text>
           {!hasSchedule ? (
-            <Text style={styles.noScheduleText}>This tech hasn't set their availability yet.</Text>
+            <Text style={styles.noScheduleText}>This tech hasn’t set their availability yet.</Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateScroll}>
               {upcomingDates.map((date, i) => {
-                const dayName = DAY_NAMES[date.getDay()];
-                const available = !!techSchedule[dayName];
+                const day = dayName(date);
+                const available = !!techSchedule[day]?.length;
                 const isSelected = selectedDate?.toDateString() === date.toDateString();
                 const isToday = i === 0;
                 return (
@@ -380,7 +292,7 @@ export default function BookScreen() {
                       isSelected && styles.dateChipTextSelected,
                       !available && styles.dateChipTextDisabled,
                     ]}>
-                      {isToday ? 'Today' : dayName.slice(0, 3)}
+                      {isToday ? 'Today' : day.slice(0, 3)}
                     </Text>
                     <Text style={[
                       styles.dateChipNum,
@@ -435,7 +347,7 @@ export default function BookScreen() {
 
         {/* Alternative time request */}
         <View style={styles.section}>
-          <Text style={styles.label}>Can't find the right time?</Text>
+          <Text style={styles.label}>Can’t find the right time?</Text>
           <TextInput
             value={altTimeRequest}
             onChangeText={setAltTimeRequest}

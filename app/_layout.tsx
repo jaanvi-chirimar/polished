@@ -30,7 +30,7 @@ function RootLayoutNav() {
       return;
     }
     if (route === 'auth' || route === 'setup') router.replace('/(tabs)');
-  }, [user, userProfile, loading, segments]);
+  }, [user, userProfile, loading, segments, router]);
 
   // The app is always light-themed.
   return (

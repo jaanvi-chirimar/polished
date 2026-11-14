@@ -1,21 +1,15 @@
+import Stars from "@/components/Stars";
 import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { db } from "@/firebase/config";
+import { Appointment, byDateAsc, byDateDesc, subscribeToAppointments } from "@/lib/appointments";
 import { createCalendarEvent, getValidAccessToken } from "@/lib/googleCalendar";
 import { getThreadId } from "@/lib/threadId";
-import { formatDateTime, getUserName } from "@/lib/utils";
+import { buildFullName, formatDateTime } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import {
-    addDoc,
-    collection,
-    doc,
-    onSnapshot,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
-} from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import { addDoc, collection, doc, onSnapshot, query, Timestamp, updateDoc, where } from "firebase/firestore";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -27,58 +21,18 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { db } from "../../firebase/config";
-
-type ClientAppointment = {
-  id: string;
-  techId: string;
-  techName: string;
-  dateTime: Date;
-  note?: string;
-  status: string;
-  appointmentType?: string;
-  clientCalendarEventId?: string | null;
-};
-
-type TechAppointment = {
-  id: string;
-  clientId: string;
-  clientName: string;
-  dateTime: Date;
-  note?: string;
-  status: string;
-  appointmentType?: string;
-  altTimeRequest?: string;
-};
 
 type BookingsSection = {
   title: string;
-  data: (ClientAppointment | TechAppointment)[];
+  data: Appointment[];
   type: "client" | "tech";
   isPast?: boolean;
 };
 
-function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
-  return (
-    <View style={{ flexDirection: "row", gap: 2 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Ionicons
-          key={i}
-          name={i <= Math.round(rating) ? "star" : "star-outline"}
-          size={size}
-          color="#F5A623"
-        />
-      ))}
-    </View>
-  );
-}
-
 export default function BookingsScreen() {
-  const { user, userProfile, loading: authLoading } = useAuth();
-  const [clientUpcoming, setClientUpcoming] = useState<ClientAppointment[]>([]);
-  const [clientPast, setClientPast] = useState<ClientAppointment[]>([]);
-  const [techRequests, setTechRequests] = useState<TechAppointment[]>([]);
-  const [techUpcoming, setTechUpcoming] = useState<TechAppointment[]>([]);
+  const { user, userProfile, isTech, isCustomer: isClient } = useAuth();
+  const [clientAppts, setClientAppts] = useState<Appointment[]>([]);
+  const [techAppts, setTechAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewedMap, setReviewedMap] = useState<Map<string, number>>(new Map());
   const [reviewModal, setReviewModal] = useState<{
@@ -90,19 +44,16 @@ export default function BookingsScreen() {
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  const isClient = userProfile?.roles?.includes("user") ?? false;
-  const isTech = userProfile?.roles?.includes("nailTech") ?? false;
+  const myName = buildFullName(userProfile?.firstName, userProfile?.lastName, "");
 
-  async function handleAccept(appointmentId: string, appointment: TechAppointment) {
-    await updateDoc(doc(db, "appointments", appointmentId), { status: "confirmed" });
-    // Create calendar event for the tech (their own token — works fine)
-    const techName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(" ") || "Nail Tech";
-    const techToken = await getValidAccessToken(user!.uid);
-    if (techToken) {
-      const eventId = await createCalendarEvent(techToken, appointment, techName, appointment.clientName);
-      if (eventId) updateDoc(doc(db, "appointments", appointmentId), { techCalendarEventId: eventId });
+  async function handleAccept(appt: Appointment) {
+    await updateDoc(doc(db, "appointments", appt.id), { status: "confirmed" });
+    // Add it to the tech's own calendar. The client's event is added from their own app (see below).
+    const token = await getValidAccessToken(user!.uid);
+    if (token) {
+      const eventId = await createCalendarEvent(token, appt, myName || "Nail Tech", appt.otherName);
+      if (eventId) updateDoc(doc(db, "appointments", appt.id), { techCalendarEventId: eventId });
     }
-    // Client's calendar event is created client-side when they load their confirmed appointments
   }
 
   async function handleDecline(appointmentId: string) {
@@ -111,8 +62,7 @@ export default function BookingsScreen() {
 
   function handleMessage(clientId: string) {
     if (!user?.uid) return;
-    const threadId = getThreadId(user.uid, clientId);
-    router.push(`/(tabs)/inbox/chat/${threadId}` as any);
+    router.push(`/(tabs)/inbox/chat/${getThreadId(user.uid, clientId)}` as any);
   }
 
   async function handleSubmitReview() {
@@ -128,8 +78,6 @@ export default function BookingsScreen() {
         createdAt: Timestamp.now(),
       });
       setReviewModal(null);
-      setReviewRating(5);
-      setReviewComment("");
     } catch {
       Alert.alert("Error", "Failed to submit review. Please try again.");
     } finally {
@@ -137,27 +85,18 @@ export default function BookingsScreen() {
     }
   }
 
-  // Create client-side calendar events for confirmed upcoming appointments that don't have one yet
+  // Live appointment lists (as client and/or as tech)
   useEffect(() => {
-    if (!user?.uid || !isClient) return;
-    const needsCalendar = clientUpcoming.filter(
-      (a) => a.status === "confirmed" && !a.clientCalendarEventId
-    );
-    if (needsCalendar.length === 0) return;
-    (async () => {
-      const token = await getValidAccessToken(user.uid);
-      if (!token) return;
-      const clientName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(" ") || "Client";
-      for (const appt of needsCalendar) {
-        const eventId = await createCalendarEvent(token, appt, appt.techName, clientName);
-        if (eventId) {
-          updateDoc(doc(db, "appointments", appt.id), { clientCalendarEventId: eventId });
-        }
-      }
-    })();
-  }, [clientUpcoming, user?.uid, isClient]);
+    if (!user?.uid) return;
+    const done = () => setLoading(false);
+    const unsubs: (() => void)[] = [];
+    if (isClient) unsubs.push(subscribeToAppointments("client", user.uid, (a) => { setClientAppts(a); done(); }, done));
+    if (isTech) unsubs.push(subscribeToAppointments("tech", user.uid, (a) => { setTechAppts(a); done(); }, done));
+    if (!isClient && !isTech) done();
+    return () => unsubs.forEach((u) => u());
+  }, [user?.uid, isClient, isTech]);
 
-  // Load which appointments the client has already reviewed
+  // Which appointments the client has already reviewed
   useEffect(() => {
     if (!user?.uid || !isClient) return;
     const q = query(collection(db, "reviews"), where("clientId", "==", user.uid));
@@ -165,117 +104,39 @@ export default function BookingsScreen() {
       const map = new Map<string, number>();
       snap.docs.forEach((d) => {
         const data = d.data();
-        if (data.appointmentId) map.set(data.appointmentId as string, data.rating as number);
+        if (data.appointmentId) map.set(data.appointmentId, data.rating);
       });
       setReviewedMap(map);
     });
   }, [user?.uid, isClient]);
 
-  useEffect(() => {
-    if (!user?.uid) {
-      if (!authLoading) router.replace("/auth" as any);
-      return;
-    }
-
+  const { clientUpcoming, clientPast, techRequests, techUpcoming } = useMemo(() => {
     const now = new Date();
-    const clientQ = query(collection(db, "appointments"), where("clientId", "==", user.uid));
-    const techQ = query(collection(db, "appointments"), where("techId", "==", user.uid));
-
-    const unsubClient = onSnapshot(
-      clientQ,
-      async (snapshot) => {
-        const docs = snapshot.docs
-          .map((d) => {
-            const data = d.data();
-            const dt = data.dateTime?.toDate?.() ?? null;
-            return { id: d.id, ...data, dateTime: dt };
-          })
-          .filter((a) => a.dateTime) as {
-          id: string;
-          techId: string;
-          dateTime: Date;
-          note?: string;
-          status: string;
-        }[];
-
-        const withNames: ClientAppointment[] = await Promise.all(
-          docs.map(async (a) => ({
-            id: a.id,
-            techId: a.techId,
-            techName: await getUserName(a.techId, "Tech"),
-            dateTime: a.dateTime,
-            note: a.note,
-            status: a.status || "pending",
-            appointmentType: (a as any).appointmentType,
-            clientCalendarEventId: (a as any).clientCalendarEventId ?? null,
-          }))
-        );
-
-        const upcoming = withNames
-          .filter((a) => a.dateTime >= now && a.status !== "declined")
-          .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-        const past = withNames
-          .filter((a) => a.dateTime < now)
-          .sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
-        setClientUpcoming(upcoming);
-        setClientPast(past);
-      },
-      (err) => console.error("Bookings client listener:", err)
-    );
-
-    const unsubTech = onSnapshot(
-      techQ,
-      async (snapshot) => {
-        const docs = snapshot.docs
-          .map((d) => {
-            const data = d.data();
-            const dt = data.dateTime?.toDate?.() ?? null;
-            return { id: d.id, ...data, dateTime: dt };
-          })
-          .filter((a) => a.dateTime) as {
-          id: string;
-          clientId: string;
-          dateTime: Date;
-          note?: string;
-          status: string;
-        }[];
-
-        const withNames: TechAppointment[] = await Promise.all(
-          docs.map(async (a) => ({
-            id: a.id,
-            clientId: a.clientId,
-            clientName: await getUserName(a.clientId, "Customer"),
-            dateTime: a.dateTime,
-            note: a.note,
-            status: a.status || "pending",
-            appointmentType: (a as any).appointmentType,
-            altTimeRequest: (a as any).altTimeRequest,
-          }))
-        );
-
-        const requests = withNames
-          .filter((a) => a.status === "pending")
-          .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-        const upcoming = withNames
-          .filter((a) => a.dateTime >= now && a.status !== "pending" && a.status !== "declined")
-          .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-        setTechRequests(requests);
-        setTechUpcoming(upcoming);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Bookings tech listener:", err);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      unsubClient();
-      unsubTech();
+    return {
+      clientUpcoming: clientAppts.filter((a) => a.dateTime >= now && a.status !== "declined").sort(byDateAsc),
+      clientPast: clientAppts.filter((a) => a.dateTime < now).sort(byDateDesc),
+      techRequests: techAppts.filter((a) => a.status === "pending").sort(byDateAsc),
+      techUpcoming: techAppts.filter((a) => a.dateTime >= now && a.status === "confirmed").sort(byDateAsc),
     };
-  }, [user?.uid, authLoading]);
+  }, [clientAppts, techAppts]);
 
-  if (authLoading || !user) return null;
+  // Each person can only write to their own Google Calendar, so the client's app
+  // adds confirmed appointments to the client's calendar.
+  useEffect(() => {
+    if (!user?.uid || !isClient) return;
+    const needsEvent = clientUpcoming.filter((a) => a.status === "confirmed" && !a.clientCalendarEventId);
+    if (needsEvent.length === 0) return;
+    (async () => {
+      const token = await getValidAccessToken(user.uid);
+      if (!token) return;
+      for (const appt of needsEvent) {
+        const eventId = await createCalendarEvent(token, appt, appt.otherName, myName || "Client");
+        if (eventId) updateDoc(doc(db, "appointments", appt.id), { clientCalendarEventId: eventId });
+      }
+    })();
+  }, [clientUpcoming, user?.uid, isClient, myName]);
+
+  if (!user) return null;
 
   const sections: BookingsSection[] = [];
   if (isClient) {
@@ -290,15 +151,7 @@ export default function BookingsScreen() {
     if (techUpcoming.length > 0)
       sections.push({ title: "Upcoming (as tech)", data: techUpcoming, type: "tech" });
   }
-
-  const isEmpty =
-    !isClient && !isTech
-      ? true
-      : isClient && isTech
-      ? clientUpcoming.length === 0 && clientPast.length === 0 && techRequests.length === 0 && techUpcoming.length === 0
-      : isClient
-      ? clientUpcoming.length === 0 && clientPast.length === 0
-      : techRequests.length === 0 && techUpcoming.length === 0;
+  const isEmpty = sections.length === 0;
 
   return (
     <View style={styles.container}>
@@ -339,8 +192,6 @@ export default function BookingsScreen() {
           )}
           renderItem={({ item, section }) => {
             const isTechPending = section.type === "tech" && item.status === "pending";
-            const appt = item as TechAppointment;
-            const clientAppt = item as ClientAppointment;
             const isPastClient = section.isPast && section.type === "client";
             const existingRating = reviewedMap.get(item.id);
 
@@ -348,7 +199,7 @@ export default function BookingsScreen() {
               <View style={[styles.card, isTechPending && styles.cardPending]}>
                 <View style={styles.cardTopRow}>
                   <Text style={styles.name}>
-                    {section.type === "client" ? clientAppt.techName : appt.clientName}
+                    {item.otherName}
                   </Text>
                   {!isTechPending && (
                     <View
@@ -377,7 +228,7 @@ export default function BookingsScreen() {
                 ) : null}
                 {item.note ? (
                   <Text style={styles.noteText} numberOfLines={2}>
-                    "{item.note}"
+                    “{item.note}”
                   </Text>
                 ) : null}
 
@@ -393,8 +244,8 @@ export default function BookingsScreen() {
                           setReviewComment("");
                           setReviewModal({
                             appointmentId: item.id,
-                            techId: clientAppt.techId,
-                            techName: clientAppt.techName,
+                            techId: item.techId,
+                            techName: item.otherName,
                           });
                         }}
                         activeOpacity={0.8}
@@ -406,10 +257,10 @@ export default function BookingsScreen() {
                   </View>
                 )}
 
-                {isTechPending && appt.altTimeRequest ? (
+                {isTechPending && item.altTimeRequest ? (
                   <View style={styles.altTimeRow}>
                     <Ionicons name="time-outline" size={13} color={Polish.colors.primary} />
-                    <Text style={styles.altTimeText}>Requested: {appt.altTimeRequest}</Text>
+                    <Text style={styles.altTimeText}>Requested: {item.altTimeRequest}</Text>
                   </View>
                 ) : null}
 
@@ -417,14 +268,14 @@ export default function BookingsScreen() {
                   <View style={styles.actionRow}>
                     <TouchableOpacity
                       style={styles.acceptButton}
-                      onPress={() => handleAccept(item.id, item as TechAppointment)}
+                      onPress={() => handleAccept(item)}
                       activeOpacity={0.8}
                     >
                       <Text style={styles.acceptButtonText}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.messageButton}
-                      onPress={() => handleMessage(appt.clientId)}
+                      onPress={() => handleMessage(item.clientId)}
                       activeOpacity={0.8}
                     >
                       <Ionicons name="chatbubble-outline" size={14} color={Polish.colors.primary} />
@@ -455,15 +306,7 @@ export default function BookingsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Rate {reviewModal?.techName}</Text>
             <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <TouchableOpacity key={i} onPress={() => setReviewRating(i)} activeOpacity={0.7}>
-                  <Ionicons
-                    name={i <= reviewRating ? "star" : "star-outline"}
-                    size={40}
-                    color="#F5A623"
-                  />
-                </TouchableOpacity>
-              ))}
+              <Stars rating={reviewRating} size={40} onChange={setReviewRating} />
             </View>
             <TextInput
               style={styles.reviewInput}
