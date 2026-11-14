@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 850" width="900" height="850" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B59A97"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #3A2E2E; }
+      .subtitle { font-size: 13px; fill: #8A7B7B; }
+      .section { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; fill: #C97B84; }
+      .box { fill: #FFFFFF; stroke: #E6D8D5; stroke-width: 1.5; }
+      .group { fill: #FBF3F2; stroke: #E6C9C6; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .h { font-size: 13px; font-weight: 600; fill: #3A2E2E; text-anchor: middle; }
+      .t { font-size: 11.5px; fill: #8A7B7B; text-anchor: middle; }
+      .glabel { font-size: 12px; font-weight: 600; fill: #A8646C; }
+      .line { stroke: #B59A97; stroke-width: 1.5; fill: none; }
+      .note { font-size: 11.5px; fill: #8A7B7B; font-style: italic; }
+      .pill { font-size: 12.5px; font-weight: 600; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="900" height="850" fill="#FAF7F5"/>
+
+  <text x="16" y="40" class="title">Polish: how it fits together</text>
+  <text x="16" y="62" class="subtitle">Expo Router app · Firebase backend · Cornell students only</text>
+
+  <!-- 1. Getting in -->
+  <text x="16" y="100" class="section">1 · GETTING IN</text>
+  <rect x="16" y="112" width="200" height="56" rx="10" class="box"/>
+  <text x="116" y="135" class="h">_layout.tsx</text>
+  <text x="116" y="153" class="t">auth guard picks the screen</text>
+  <rect x="238" y="112" width="200" height="56" rx="10" class="box"/>
+  <text x="338" y="135" class="h">auth.tsx</text>
+  <text x="338" y="153" class="t">Cornell Google sign-in</text>
+  <rect x="460" y="112" width="200" height="56" rx="10" class="box"/>
+  <text x="560" y="135" class="h">setup.tsx</text>
+  <text x="560" y="153" class="t">pick role(s) + profile wizard</text>
+  <rect x="682" y="112" width="202" height="56" rx="10" class="box"/>
+  <text x="783" y="135" class="h">(tabs)</text>
+  <text x="783" y="153" class="t">the main app</text>
+  <line x1="216" y1="140" x2="236" y2="140" class="line" marker-end="url(#arrow)"/>
+  <line x1="438" y1="140" x2="458" y2="140" class="line" marker-end="url(#arrow)"/>
+  <line x1="660" y1="140" x2="680" y2="140" class="line" marker-end="url(#arrow)"/>
+  <text x="16" y="188" class="note">Returning users skip straight from sign-in to the tabs.</text>
+
+  <!-- 2. Screens -->
+  <text x="16" y="222" class="section">2 · SCREENS</text>
+  <rect x="16" y="232" width="530" height="146" rx="12" class="group"/>
+  <text x="30" y="252" class="glabel">Tab bar · app/(tabs)/</text>
+  <rect x="30" y="262" width="118" height="104" rx="10" class="box"/>
+  <text x="89" y="286" class="h">Home</text>
+  <text x="89" y="306" class="t">index.tsx</text>
+  <text x="89" y="322" class="t">find techs, or</text>
+  <text x="89" y="338" class="t">tech dashboard</text>
+  <rect x="158" y="262" width="118" height="104" rx="10" class="box"/>
+  <text x="217" y="286" class="h">Bookings</text>
+  <text x="217" y="306" class="t">bookings.tsx</text>
+  <text x="217" y="322" class="t">accept / decline</text>
+  <text x="217" y="338" class="t">leave reviews</text>
+  <rect x="286" y="262" width="118" height="104" rx="10" class="box"/>
+  <text x="345" y="286" class="h">Inbox</text>
+  <text x="345" y="306" class="t">inbox/</text>
+  <text x="345" y="322" class="t">conversations</text>
+  <text x="345" y="338" class="t">+ chat/[id]</text>
+  <rect x="414" y="262" width="118" height="104" rx="10" class="box"/>
+  <text x="473" y="286" class="h">Profile</text>
+  <text x="473" y="306" class="t">ProfileEditor</text>
+  <text x="473" y="322" class="t">view &amp; edit</text>
+  <text x="473" y="338" class="t">your profile</text>
+
+  <rect x="566" y="232" width="318" height="146" rx="12" class="group"/>
+  <text x="580" y="252" class="glabel">Opened on top of the tabs</text>
+  <rect x="580" y="262" width="140" height="48" rx="10" class="box"/>
+  <text x="650" y="282" class="h">tech/[id]</text>
+  <text x="650" y="299" class="t">a tech's public page</text>
+  <rect x="730" y="262" width="140" height="48" rx="10" class="box"/>
+  <text x="800" y="282" class="h">book/[id]</text>
+  <text x="800" y="299" class="t">pick a date &amp; time</text>
+  <rect x="580" y="318" width="140" height="48" rx="10" class="box"/>
+  <text x="650" y="338" class="h">apply.tsx</text>
+  <text x="650" y="355" class="t">become a tech</text>
+  <rect x="730" y="318" width="140" height="48" rx="10" class="box"/>
+  <text x="800" y="338" class="h">setup.tsx</text>
+  <text x="800" y="355" class="t">first-time wizard</text>
+
+  <line x1="281" y1="380" x2="281" y2="424" class="line" marker-end="url(#arrow)"/>
+  <line x1="725" y1="380" x2="725" y2="424" class="line" marker-end="url(#arrow)"/>
+  <text x="291" y="406" class="note">use</text>
+  <text x="735" y="406" class="note">use</text>
+
+  <!-- 3. Shared code -->
+  <text x="16" y="444" class="section">3 · SHARED CODE</text>
+  <rect x="16" y="454" width="203" height="80" rx="10" class="box"/>
+  <text x="117" y="480" class="h">AuthContext.tsx</text>
+  <text x="117" y="499" class="t">who's signed in + profile</text>
+  <text x="117" y="515" class="t">saveProfile · isTech</text>
+  <rect x="237" y="454" width="203" height="80" rx="10" class="box"/>
+  <text x="338" y="480" class="h">components/</text>
+  <text x="338" y="499" class="t">profile/ form pieces</text>
+  <text x="338" y="515" class="t">ProfileEditor · Stars</text>
+  <rect x="458" y="454" width="203" height="80" rx="10" class="box"/>
+  <text x="559" y="480" class="h">lib/</text>
+  <text x="559" y="499" class="t">profileForm · appointments</text>
+  <text x="559" y="515" class="t">techs · time · calendar</text>
+  <rect x="679" y="454" width="205" height="80" rx="10" class="box"/>
+  <text x="781" y="480" class="h">constants/</text>
+  <text x="781" y="499" class="t">theme: colors, spacing</text>
+  <text x="781" y="515" class="t">nailTechOptions: lists</text>
+
+  <line x1="450" y1="536" x2="450" y2="576" class="line" marker-end="url(#arrow)"/>
+  <text x="460" y="560" class="note">read &amp; write</text>
+
+  <!-- 4. Backend -->
+  <text x="16" y="596" class="section">4 · BACKEND</text>
+  <rect x="16" y="606" width="170" height="96" rx="10" class="box"/>
+  <text x="101" y="634" class="h">Firebase Auth</text>
+  <text x="101" y="654" class="t">Google sign-in</text>
+  <text x="101" y="670" class="t">@cornell.edu only</text>
+  <rect x="204" y="606" width="330" height="96" rx="10" class="box"/>
+  <text x="369" y="634" class="h">Cloud Firestore</text>
+  <text x="369" y="654" class="t">users · appointments · reviews</text>
+  <text x="369" y="670" class="t">threads (+ messages) · applications</text>
+  <text x="369" y="686" class="t">live updates via onSnapshot</text>
+  <rect x="552" y="606" width="170" height="96" rx="10" class="box"/>
+  <text x="637" y="634" class="h">Firebase Storage</text>
+  <text x="637" y="654" class="t">portfolio photos</text>
+  <text x="637" y="670" class="t">portfolios/{uid}/…</text>
+  <rect x="740" y="606" width="144" height="96" rx="10" class="box"/>
+  <text x="812" y="634" class="h">Google Calendar</text>
+  <text x="812" y="654" class="t">event added when a</text>
+  <text x="812" y="670" class="t">booking is confirmed</text>
+
+  <!-- 5. Appointment status -->
+  <text x="16" y="738" class="section">5 · APPOINTMENT STATUS</text>
+  <rect x="16" y="750" width="120" height="34" rx="17" fill="#FFF4E0" stroke="#E8B04A" stroke-width="1.5"/>
+  <text x="76" y="772" class="pill" fill="#9A6A12">pending</text>
+  <line x1="136" y1="767" x2="284" y2="767" class="line" marker-end="url(#arrow)"/>
+  <text x="210" y="759" class="t">tech accepts</text>
+  <rect x="286" y="750" width="120" height="34" rx="17" fill="#E7F4EC" stroke="#5BA77A" stroke-width="1.5"/>
+  <text x="346" y="772" class="pill" fill="#2F6E48">confirmed</text>
+  <line x1="406" y1="767" x2="554" y2="767" class="line" marker-end="url(#arrow)"/>
+  <text x="480" y="759" class="t">date passes</text>
+  <rect x="556" y="750" width="230" height="34" rx="17" fill="#F3EEEC" stroke="#BBAAA6" stroke-width="1.5"/>
+  <text x="671" y="772" class="pill" fill="#5E4F4C">past · customer can review</text>
+  <text x="346" y="801" class="t">calendar events added</text>
+  <text x="16" y="834" class="note">Tech declines → status "declined" (hidden from upcoming lists)</text>
+</svg>

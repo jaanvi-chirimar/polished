@@ -1,250 +1,81 @@
-# Polish Codebase Guide
+# Polish: Codebase Guide
 
-A walkthrough of how the Polish app works, file by file.
+Polish connects Cornell nail techs with students who want their nails done. Customers browse techs and book 30-minute slots. Techs set their hours and prices, then accept or decline requests. Both sides can chat, and confirmed bookings go on Google Calendar.
 
----
-
-## How the app starts
-
-When the app launches, everything begins in **`app/_layout.tsx`** (the root layout).
-
-1. It wraps the entire app in `SafeAreaProvider` and `AuthProvider` (from `contexts/AuthContext.tsx`)
-2. Inside `RootLayoutNav`, it checks auth state and decides where to send the user:
-   - **No user / no phone number** → redirect to `/auth`
-   - **User exists but no profile or profile not completed** → redirect to `/setup`
-   - **Profile completed** → send to `/(tabs)` (the main app)
-3. All screens are registered as a `Stack` (meaning they push on top of each other like pages)
-
-**Key concept:** Expo Router uses **file-based routing**. Every file in `app/` becomes a route automatically. The file name = the URL path.
+![How Polish fits together](docs/architecture.svg)
 
 ---
 
-## Authentication flow
+## Running it
 
-### `app/auth.tsx` — Phone sign-in screen
+1. Put `.env.local` (7 `EXPO_PUBLIC_*` keys) and `GoogleService-Info.plist` in the repo root. Both are git-ignored.
+2. `npm install`
+3. `npm run ios`. Google sign-in needs a development build, so Expo Go won't work. If you've pulled changes to `app.json` or packages, run `npx expo prebuild --clean` first.
 
-- User enters their phone number
-- Firebase sends an SMS verification code
-- User enters the code to sign in
-- On success, `AuthContext` picks up the new user and the root layout redirects them to `/setup` (if new) or `/(tabs)` (if returning)
-
-Uses `lib/phoneAuth.ts` for the actual Firebase phone auth logic (reCAPTCHA, `signInWithPhoneNumber`).
-
-### `app/setup.tsx` — Profile setup (first time only)
-
-After signing in for the first time, users land here to:
-1. Pick their role(s): **Customer**, **Nail Tech**, or **both**
-2. Enter their name and location
-3. If nail tech: pick tools, designs, availability days, and write a bio
-4. If customer: pick style preferences
-5. Save everything to Firestore → `profileCompleted: true` → redirected to `/(tabs)`
+`npm start` starts Metro only. `npx expo start --web` runs in the browser, but Google sign-in may not work there.
 
 ---
 
-## The tab bar (main app)
+## Where things live
 
-**`app/(tabs)/_layout.tsx`** defines the bottom tab bar with 4 tabs:
+| Path | What it does |
+|---|---|
+| `app/` | Every file is a screen (Expo Router). `[id]` = URL parameter, `(tabs)` = tab bar group. |
+| `app/_layout.tsx` | Auth guard: no user → `/auth`, unfinished profile → `/setup`, otherwise → tabs. |
+| `contexts/AuthContext.tsx` | `useAuth()` → `user`, `userProfile`, `isTech`, `isCustomer`, `saveProfile`, `refreshProfile`. Also the main types. |
+| `components/ProfileEditor.tsx` | The Profile tab: view mode, plus edit mode with collapsible sections. |
+| `components/profile/` | Form pieces (hours, portfolio, pricing, location…) shared by setup and the Profile tab. |
+| `lib/profileForm.ts` | The profile form's fields, required-field rules, and conversion to and from a saved profile. |
+| `lib/appointments.ts` | Live appointment lists with the other person's name filled in. |
+| `lib/techs.ts` | Loading a tech and reading their pricing tiers. |
+| `lib/time.ts` | `"HH:MM"` helpers, 30-minute slots, schedule summaries. |
+| `lib/` (other) | `utils` (names, dates), `googleCalendar`, `portfolio` (photo upload), `threadId`. |
+| `constants/theme.ts` | Colors, spacing, type. Use these instead of hard-coded values. |
+| `constants/nailTechOptions.ts` | Every option list (locations, tools, designs, payment methods, tiers). |
 
-| Tab | File | What it does |
-|-----|------|-------------|
-| Home | `app/(tabs)/index.tsx` | Discovery feed (customers) or status card (techs) |
-| Bookings | `app/(tabs)/bookings.tsx` | Upcoming/past appointments for both roles |
-| Inbox | `app/(tabs)/inbox/index.tsx` | List of message threads |
-| Profile | `app/(tabs)/profile.tsx` | Edit your profile |
-
-### Home screen — `app/(tabs)/index.tsx`
-
-This screen changes based on your role:
-
-- **Customer only:** Search bar, location/service filters, "Browse by style" chips, grid of nail tech cards. Tap a card → opens tech profile.
-- **Tech only:** Status card showing next appointment or pending booking count. If nothing, shows "You're all set for today."
-- **Both roles:** Full customer discovery + tech status card at the top.
-
-The tech list comes from a Firestore query: all users where `roles` array contains `"nailTech"`.
-
-### Bookings screen — `app/(tabs)/bookings.tsx`
-
-Uses `SectionList` to show appointments grouped into sections:
-- **As customer:** "Upcoming" and "Past bookings"
-- **As tech:** "Incoming requests" (pending) and "Upcoming" (confirmed)
-
-Listens to Firestore `appointments` collection with real-time `onSnapshot` listeners.
-
-### Inbox — `app/(tabs)/inbox/`
-
-This is a **nested navigator** (has its own `_layout.tsx`):
-
-- **`inbox/index.tsx`** — List of conversation threads. Queries Firestore `threads` collection where `participantIds` contains your uid. Shows other person's name, last message, and timestamp.
-- **`inbox/chat/[id].tsx`** — Individual chat screen. The `[id]` is the thread ID (format: `uid1_uid2` sorted alphabetically). Real-time message listener, sends messages to Firestore `threads/{threadId}/messages` subcollection.
-
-### Profile tab — `app/(tabs)/profile.tsx`
-
-Thin wrapper around `ProfileEditor` component. Shows in the tab bar (no back button).
+`@/` means the repo root, so `@/lib/utils` is `lib/utils.ts`.
 
 ---
 
-## Standalone screens (outside tabs)
+## Key ideas
 
-These open as full-screen pages **on top of** the tab bar (with a back button):
-
-### `app/tech/[id].tsx` — Nail tech profile page
-
-- `[id]` is the tech's user ID (passed as a URL param)
-- Fetches the tech's Firestore document
-- Shows: name, location, bio, tools, designs, availability days
-- Two action buttons: **Book** (→ `/book/[id]`) and **Message** (→ opens chat thread)
-- If viewing your own profile, shows an "Edit" button instead
-
-### `app/book/[id].tsx` — Booking screen
-
-- `[id]` is the tech's user ID
-- Date/time picker and optional note
-- Creates a document in Firestore `appointments` collection with status `"pending"`
-
-### `app/profile.tsx` — Profile editor (standalone)
-
-Same `ProfileEditor` component as the tab version, but with a back button. Used when navigating from the tech profile "Edit" button.
+- **Roles.** `users/{uid}.roles` holds `"user"` (customer), `"nailTech"`, or both. Screens change based on this. Tech-only users get a dashboard on Home instead of the tech list.
+- **Save profiles with `saveProfile`.** `AuthContext` reads `users/{uid}` at sign-in, without a live listener. `saveProfile` writes and updates the app in one step, and fields set to `undefined` are removed. If something else writes to the doc, call `refreshProfile()`.
+- **Lists are live.** Appointments, techs, threads and messages use `onSnapshot`, and each effect returns its unsubscribe function.
+- **Availability → slots.** A tech's schedule is `{ Monday: [{ start: "14:00", end: "18:00" }] }`. The booking screen cuts each block into 30-minute slots.
+- **Chat thread IDs** are the two user IDs sorted and joined with `_`, so both people always open the same thread.
+- **New users pick their role in `/setup`**, not on the sign-in screen.
+- **Calendar runs on the phone.** Tokens are saved at sign-in. Each person's app adds the event to their own calendar: the tech's when they accept, the customer's the next time their Bookings tab loads.
 
 ---
 
-## Shared code
+## Data (Firestore)
 
-### `components/ProfileEditor.tsx`
+| Collection | Main fields |
+|---|---|
+| `users/{uid}` | `roles`, `firstName`, `lastName`, `location`, `profileCompleted`, `googleCalendar`, `nailTechProfile` { bio, tools, designs, portfolio, availabilities.schedule, pricing, removalAddOn, paymentMethods, maxAppointmentsPerWeek, policies } |
+| `appointments/{id}` | `clientId`, `techId`, `dateTime`, `status` (pending / confirmed / declined), `appointmentType`, `pricingTier`, `addOns`, `note`, `altTimeRequest`, calendar event IDs |
+| `reviews/{id}` | `techId`, `clientId`, `appointmentId`, `rating` 1–5, `comment` |
+| `threads/{a_b}` + `/messages` | `participantIds`, `lastMessage`, `lastMessageAt` · messages: `text`, `senderId`, `createdAt` |
+| `applications/{uid}` | `uid`, bio, location, tools, designs, `whyApply`, `status` |
 
-The full profile editing UI, used by both `app/profile.tsx` and `app/(tabs)/profile.tsx`. Props:
-- `showBackButton` — whether to show a back arrow (standalone) or not (tab)
-- `topPadding` — safe area inset for standalone screens
-
-Handles: loading profile from Firestore, editing name/location/bio/tools/designs/availability/preferences, role display, saving to Firestore, and logout.
-
-### `contexts/AuthContext.tsx`
-
-React context that provides auth state to the entire app:
-- `user` — Firebase Auth user object (has `uid`, `phoneNumber`)
-- `userProfile` — Firestore profile document (has `roles`, `firstName`, `lastName`, `nailTechProfile`, etc.)
-- `loading` — whether auth state is still being determined
-- `refreshProfile()` — re-fetch the profile from Firestore
-- `logout()` — sign out
-
-Listens to `onAuthStateChanged` and fetches the matching Firestore document from `users/{uid}`.
-
-### `firebase/config.ts`
-
-Initializes Firebase and exports:
-- `auth` — Firebase Auth instance
-- `db` — Firestore instance
-- `firebaseConfig` — the config object (used by auth.tsx for reCAPTCHA)
-
-### `lib/utils.ts`
-
-Shared utility functions used across many screens:
-- `buildFullName(firstName, lastName, fallback)` — combines name parts into a display name
-- `getUserName(uid, fallback)` — fetches a user's name from Firestore by uid
-- `formatDateTime(date)` — formats a Date as "Mon, Jan 5 at 2:30 PM"
-
-### `lib/phoneAuth.ts`
-
-Phone authentication helper:
-- `sendPhoneVerificationCode()` — handles reCAPTCHA setup and calls `signInWithPhoneNumber`
-- `formatPhoneNumber()` — normalizes phone input to `+1XXXXXXXXXX` format
-
-### `lib/threadId.ts`
-
-- `getThreadId(uid1, uid2)` — creates a stable, sorted thread ID like `abc123_xyz789`. Used to ensure both users always reference the same chat thread.
-
-### `constants/theme.ts`
-
-Design tokens (`Polish` object): colors, spacing, radius, typography, shadows. Every screen imports from here for consistent styling.
-
-### `constants/nailTechOptions.ts`
-
-Predefined option lists: tools/techniques, designs, customer preferences, locations. Used in setup, profile editing, and home screen filters.
+Portfolio photos go in Storage at `portfolios/{uid}/…`. The first photo is the cover.
 
 ---
 
-## Firestore data model
+## Known gaps
 
-### `users` collection
-```
-users/{uid}
-├── phoneNumber: "+15551234567"
-├── firstName: "Jane"
-├── lastName: "Doe"
-├── roles: ["user", "nailTech"]    // can have both
-├── profileCompleted: true
-├── location: "Downtown"
-├── preferences: ["Gel manicures", "Nail art"]  // customer prefs
-├── nailTechProfile:               // only if role includes "nailTech"
-│   ├── bio: "Specializing in gel art..."
-│   ├── location: "Collegetown"
-│   ├── tools: ["Gel polish", "Chrome"]
-│   ├── designs: ["French", "Abstract"]
-│   └── availabilities:
-│       └── days: ["Monday", "Wednesday", "Friday"]
-└── createdAt: Timestamp
-```
-
-### `appointments` collection
-```
-appointments/{id}
-├── clientId: "uid_of_customer"
-├── techId: "uid_of_tech"
-├── dateTime: Timestamp
-├── note: "French tips please"     // optional
-└── status: "pending" | "confirmed"
-```
-
-### `threads` collection (messaging)
-```
-threads/{threadId}                  // threadId = sorted "uid1_uid2"
-├── participantIds: ["uid1", "uid2"]
-├── lastMessage: "See you tomorrow!"
-├── lastMessageAt: Timestamp
-├── lastSenderId: "uid1"
-└── messages/                       // subcollection
-    └── {messageId}
-        ├── text: "See you tomorrow!"
-        ├── senderId: "uid1"
-        └── createdAt: Timestamp
-```
+- **Double-booking is possible.** Slots don't check existing appointments.
+- Customers can't cancel. Declining doesn't remove calendar events.
+- Anyone can pick "Nail Tech" at sign-up, so `/apply` can be skipped. Nothing in the app approves applications.
+- Slots are 30 minutes, but calendar events are 90.
 
 ---
 
-## File tree summary
+## How do I…
 
-```
-app/
-├── _layout.tsx              # Root layout: auth guard + routing logic
-├── auth.tsx                 # Phone sign-in screen
-├── setup.tsx                # First-time profile setup
-├── profile.tsx              # Standalone profile editor (with back button)
-├── book/[id].tsx            # Booking screen for a specific tech
-├── tech/[id].tsx            # Tech profile view
-└── (tabs)/
-    ├── _layout.tsx          # Tab bar config (Home, Bookings, Inbox, Profile)
-    ├── index.tsx            # Home: discovery (customer) or status (tech)
-    ├── bookings.tsx         # Appointments list
-    ├── profile.tsx          # Profile editor (in tab bar)
-    └── inbox/
-        ├── _layout.tsx      # Inbox stack navigator
-        ├── index.tsx        # Thread list
-        └── chat/[id].tsx    # Individual chat
-
-components/
-└── ProfileEditor.tsx        # Shared profile editing component
-
-constants/
-├── theme.ts                 # Design tokens (colors, spacing, typography)
-└── nailTechOptions.ts       # Predefined option lists
-
-contexts/
-└── AuthContext.tsx           # Auth state provider
-
-firebase/
-└── config.ts                # Firebase initialization
-
-lib/
-├── utils.ts                 # buildFullName, getUserName, formatDateTime
-├── phoneAuth.ts             # Phone auth + reCAPTCHA helper
-└── threadId.ts              # Stable chat thread ID generator
-```
+- **Add a screen:** create `app/name.tsx` and go to it with `router.push('/name')`.
+- **Add an option** (location, tool, payment…): edit `constants/nailTechOptions.ts`.
+- **Add a tech profile field:** add it to `NailTechProfile` (`AuthContext.tsx`) and to `ProfileForm`, `formFromProfile` and `profileFromForm` (`lib/profileForm.ts`). Add an input in `components/profile/`, place it in `setup.tsx` and `ProfileEditor.tsx`, and show it in `tech/[id].tsx`.
+- **Test with a non-Cornell account:** add the email to `DEMO_EMAILS` in `app/auth.tsx`.
+- **Make someone a tech by hand:** in the Firebase console, add `"nailTech"` to their `roles`.
