@@ -6,103 +6,39 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
   const { user, userProfile, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
+  // Auth guard: no user → /auth, unfinished profile → /setup, finished → tabs.
   useEffect(() => {
-    if (loading) {
-      // Still loading auth state - don't navigate yet
-      return;
-    }
+    if (loading) return;
+    const route = segments[0];
 
-    const currentRoute = segments[0];
-    const inAuthGroup = currentRoute === 'auth';
-    const inSetupGroup = currentRoute === 'setup';
-    const inTabsGroup = currentRoute === '(tabs)';
-    const inProfileGroup = currentRoute === 'profile';
-
-    // Debug logging
-    console.log('🔍 Routing check:', { 
-      hasUser: !!user, 
-      hasProfile: !!userProfile, 
-      profileCompleted: userProfile?.profileCompleted,
-      currentRoute: currentRoute || 'empty',
-      loading 
-    });
-
-    // PRIORITY 1: If no user, MUST go to auth
     if (!user) {
-      if (!inAuthGroup) {
-        router.replace('/auth' as any);
-      }
+      if (route !== 'auth') router.replace('/auth');
       return;
     }
-
-    // PRIORITY 2: User exists with phone - check profile
-    if (userProfile === null && !loading) {
-      // Profile doesn't exist in Firestore - needs setup
-      console.log('⚠️ No profile found - redirecting to /setup');
-      if (!inSetupGroup && !inProfileGroup) {
-        router.replace('/setup' as any);
-      }
+    if (!userProfile?.profileCompleted) {
+      if (route !== 'setup') router.replace('/setup');
       return;
     }
-
-    if (userProfile) {
-      if (!userProfile.profileCompleted) {
-        // Profile not completed - go to setup
-        console.log('⚠️ Profile not completed - redirecting to /setup');
-        if (!inSetupGroup && !inProfileGroup) {
-          router.replace('/setup' as any);
-        }
-      } else {
-        // Profile completed - should be on tabs
-        console.log('✅ Profile completed - checking route');
-        if (inAuthGroup || inSetupGroup) {
-          // On auth/setup but profile is done - go to tabs
-          console.log('→ Redirecting to /(tabs)');
-          router.replace('/(tabs)');
-        }
-      }
-    } else {
-      // Profile still loading - wait (don't navigate yet)
-      console.log('⏳ User exists but profile loading...');
-    }
+    if (route === 'auth' || route === 'setup') router.replace('/(tabs)');
   }, [user, userProfile, loading, segments]);
 
-  // Show loading screen while checking auth
-  if (loading) {
-    return (
-      <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="setup" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="book/[id]" />
-          <Stack.Screen name="tech/[id]" />
-          </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    );
-  }
-
+  // The app is always light-themed.
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
+    <ThemeProvider value={DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="auth" />
         <Stack.Screen name="setup" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="book/[id]" />
         <Stack.Screen name="tech/[id]" />
       </Stack>

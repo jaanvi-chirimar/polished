@@ -1,81 +1,73 @@
-# Polished.
+# Polish
 
-A dual-role nail service marketplace app connecting customers with nail technicians. Built with React Native, Expo, and Firebase.
+A nail booking app for Cornell. Customers find nail techs and book appointments. Techs set their hours, prices and policies, then accept requests. Built with React Native (Expo) and Firebase.
 
-## Features
+See [CODEBASE.md](CODEBASE.md) for how the code is organized.
 
-- **Cornell-Gated authentication** — Sign up and log in with your cornell email
-- **Dual roles** — Users can be a Customer, Nail Tech, or both
-- **Tech discovery** — Browse nail techs by location, tools, and designs
-- **Booking** — Schedule appointments with date/time picker and availability validation
-- **Messaging** — Real-time 1:1 chat between customers and techs
-- **Profile management** — Edit your profile, switch roles, manage availability
+## Run it
 
-## Tech Stack
+1. Install Node, Xcode and CocoaPods.
+2. Put `.env.local` and `GoogleService-Info.plist` in the repo root. They're git-ignored, so ask for them.
+3. Run:
+   ```bash
+   npm install
+   npm run ios
+   ```
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React Native + Expo |
-| Routing | Expo Router (file-based) |
-| Backend | Firebase (Auth + Firestore) |
-| Language | TypeScript |
+## Firebase setup
 
-## Getting Started
+In the [Firebase console](https://console.firebase.google.com):
 
-### Prerequisites
+1. **Authentication → Sign-in method:** enable **Google**.
+2. **Firestore Database:** create it. The app creates its own collections.
+3. **Storage:** enable it for portfolio photos.
+4. **Firestore → Rules:** publish rules like these:
 
-- Node.js
-- Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator (Mac) or Android Emulator, or Expo Go on your phone
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
 
-### Install & Run
+    // Anyone signed in can read profiles (names, tech list); only you can edit yours.
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == userId;
+    }
 
-```bash
-npm install
-npx expo start
+    // Only the client and the tech can see or change an appointment.
+    match /appointments/{id} {
+      allow read, update, delete: if signedIn()
+        && request.auth.uid in [resource.data.clientId, resource.data.techId];
+      allow create: if signedIn() && request.resource.data.clientId == request.auth.uid;
+    }
+
+    // Reviews are public; only the client who wrote one can create it.
+    match /reviews/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.clientId == request.auth.uid;
+    }
+
+    // Tech applications are stored at applications/{uid}. You can only see and edit your own.
+    match /applications/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Chat threads and messages: participants only.
+    match /threads/{threadId} {
+      allow read, update: if signedIn() && request.auth.uid in resource.data.participantIds;
+      allow create: if signedIn() && request.auth.uid in request.resource.data.participantIds;
+
+      match /messages/{messageId} {
+        function isParticipant() {
+          return request.auth.uid in get(/databases/$(database)/documents/threads/$(threadId)).data.participantIds;
+        }
+        allow read: if signedIn() && isParticipant();
+        allow create: if signedIn() && isParticipant() && request.resource.data.senderId == request.auth.uid;
+      }
+    }
+  }
+}
 ```
 
-Then open in your simulator or scan the QR code with Expo Go.
-
-## Project Structure
-
-```
-app/
-  _layout.tsx          Root layout — routes between auth, setup, and tabs
-  auth.tsx             Phone login flow (phone → OTP → role selection)
-  setup.tsx            First-time profile setup
-  profile.tsx          Profile editing screen
-  book/[id].tsx        Book an appointment with a tech
-  tech/[id].tsx        View a tech's profile
-  (tabs)/
-    _layout.tsx        Tab navigator (Home, Bookings, Inbox, Profile)
-    index.tsx          Home — discover techs (customers) / status (techs)
-    bookings.tsx       View and manage appointments
-    profile.tsx        Profile tab
-    inbox/
-      index.tsx        Conversation list
-      chat/[id].tsx    1:1 chat thread
-
-contexts/
-  AuthContext.tsx       Global auth state and user profile management
-
-firebase/
-  config.ts            Firebase app initialization
-
-lib/
-  phoneAuth.ts         Phone verification helpers
-  threadId.ts          Chat thread ID generation
-  getUser.ts           Firestore user lookup
-
-constants/
-  theme.ts             Design tokens (colors, spacing, typography)
-  nailTechOptions.ts   Predefined options for tools, designs, locations
-```
-
-## Data Model (Firestore)
-
-**users/{uid}** — Profile, roles, nail tech info (bio, tools, designs, availability)
-
-**appointments/{id}** — Booking linking a client to a tech (date, status, notes)
-
-**threads/{id}** — Conversation between two users, with a `messages` subcollection
+If Firestore logs an error with an index link (for example, for the weekly booking limit), open the link to create the index.
