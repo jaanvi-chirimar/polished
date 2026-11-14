@@ -24,6 +24,7 @@ Polish connects Cornell nail techs with students who want their nails done. Cust
 | `app/_layout.tsx` | Auth guard: no user → `/auth`, unfinished profile → `/setup`, otherwise → tabs. |
 | `contexts/AuthContext.tsx` | `useAuth()` → `user`, `userProfile`, `isTech`, `isCustomer`, `saveProfile`, `refreshProfile`. Also the main types. |
 | `components/ProfileEditor.tsx` | The Profile tab: view mode, plus edit mode with collapsible sections. |
+| `components/ui.tsx` | Shared building blocks: `Button`, `Chip`, `BackHeader`, `CenterMessage`, `Stars`, and common styles (`ui.card`, `ui.input`…). Use these before writing new styles. |
 | `components/profile/` | Form pieces (hours, portfolio, pricing, location…) shared by setup and the Profile tab. |
 | `lib/profileForm.ts` | The profile form's fields, required-field rules, and conversion to and from a saved profile. |
 | `lib/appointments.ts` | Live appointment lists with the other person's name filled in. |

@@ -67,12 +67,7 @@ const THUMB_SIZE = 100;
 const styles = StyleSheet.create({
   hint: { ...Polish.typography.caption, color: Polish.colors.textMuted, marginBottom: Polish.spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.sm, marginBottom: Polish.spacing.lg },
-  thumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: Polish.radius.md,
-    backgroundColor: Polish.colors.surface,
-  },
+  thumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: Polish.radius.md, backgroundColor: Polish.colors.surface },
   removeIcon: { position: 'absolute', top: 4, right: 4 },
   coverBadge: {
     position: 'absolute',

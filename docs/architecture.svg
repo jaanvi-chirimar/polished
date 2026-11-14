@@ -96,7 +96,7 @@
   <rect x="237" y="454" width="203" height="80" rx="10" class="box"/>
   <text x="338" y="480" class="h">components/</text>
   <text x="338" y="499" class="t">profile/ form pieces</text>
-  <text x="338" y="515" class="t">ProfileEditor · Stars</text>
+  <text x="338" y="515" class="t">ui · ProfileEditor</text>
   <rect x="458" y="454" width="203" height="80" rx="10" class="box"/>
   <text x="559" y="480" class="h">lib/</text>
   <text x="559" y="499" class="t">profileForm · appointments</text>

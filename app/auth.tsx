@@ -1,15 +1,15 @@
 import { Polish } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui';
 import { auth, db } from '@/firebase/config';
 import { storeGoogleTokens } from '@/lib/googleCalendar';
-import { Ionicons } from '@expo/vector-icons';
 import type { TokenResponse } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { GoogleAuthProvider, signInWithCredential, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -77,21 +77,14 @@ export default function AuthScreen() {
         <Text style={styles.subtitle}>
           Sign in with your Cornell Google account to book or offer nail appointments.
         </Text>
-        <TouchableOpacity
-          style={[styles.googleButton, (!googleRequest || loading) && styles.buttonDisabled]}
+        <Button
+          variant="outline"
+          icon="logo-google"
+          title="Sign in with Cornell Google"
+          loading={loading}
+          disabled={!googleRequest}
           onPress={() => googlePromptAsync()}
-          disabled={!googleRequest || loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color={Polish.colors.primary} size="small" />
-          ) : (
-            <>
-              <Ionicons name="logo-google" size={20} color={Polish.colors.primary} />
-              <Text style={styles.googleButtonText}>Sign in with Cornell Google</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        />
         <Text style={styles.note}>@cornell.edu accounts only</Text>
       </View>
     </View>
@@ -100,35 +93,9 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Polish.colors.background },
-  content: { flex: 1, padding: Polish.spacing.xl, paddingTop: 100 },
-  appName: {
-    ...Polish.typography.caption,
-    color: Polish.colors.primary,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: Polish.spacing.lg,
-  },
-  title: { ...Polish.typography.title, marginBottom: Polish.spacing.md, color: Polish.colors.text },
-  subtitle: {
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-    marginBottom: Polish.spacing.xxxl,
-    lineHeight: 22,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Polish.spacing.md,
-    borderWidth: 1.5,
-    borderColor: Polish.colors.primary,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.lg,
-    backgroundColor: Polish.colors.surface,
-    marginBottom: Polish.spacing.md,
-  },
-  googleButtonText: { ...Polish.typography.button, color: Polish.colors.primary },
-  buttonDisabled: { opacity: 0.6 },
+  content: { flex: 1, padding: Polish.spacing.xl, paddingTop: 100, gap: Polish.spacing.md },
+  appName: { ...Polish.typography.caption, color: Polish.colors.primary, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
+  title: { ...Polish.typography.title, color: Polish.colors.text },
+  subtitle: { ...Polish.typography.body, color: Polish.colors.textSecondary, marginBottom: Polish.spacing.xxl, lineHeight: 22 },
   note: { ...Polish.typography.caption, color: Polish.colors.textMuted, textAlign: 'center' },
 });

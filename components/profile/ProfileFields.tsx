@@ -15,7 +15,7 @@ import type { FormErrors, ProfileForm, SetField } from '@/lib/profileForm';
 import { toggleInList } from '@/lib/utils';
 import { useState } from 'react';
 import { StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { formStyles as fs } from './formStyles';
+import { Chip, ui as fs } from '@/components/ui';
 
 type FormProps = { form: ProfileForm; set: SetField; errors?: FormErrors };
 
@@ -35,19 +35,9 @@ export function ChipSelect({
 }) {
   return (
     <View style={fs.chipRow}>
-      {options.map((option) => {
-        const on = selected.includes(option);
-        return (
-          <TouchableOpacity
-            key={option}
-            style={[fs.chip, on && fs.chipSelected]}
-            onPress={() => onChange(toggleInList(selected, option))}
-            activeOpacity={0.8}
-          >
-            <Text style={[fs.chipText, on && fs.chipTextSelected]}>{option}</Text>
-          </TouchableOpacity>
-        );
-      })}
+      {options.map((option) => (
+        <Chip key={option} label={option} selected={selected.includes(option)} onPress={() => onChange(toggleInList(selected, option))} />
+      ))}
     </View>
   );
 }
@@ -96,23 +86,17 @@ export function LocationPicker({ form, set, errors = {} }: FormProps) {
   return (
     <>
       <View style={fs.chipRow}>
-        {LOCATION_OPTIONS.map((loc) => {
-          const on = loc === 'Other' ? otherOpen : !otherOpen && value === loc;
-          return (
-            <TouchableOpacity
-              key={loc}
-              style={[fs.chip, on && fs.chipSelected]}
-              onPress={() => {
-                const isOther = loc === 'Other';
-                setOtherOpen(isOther);
-                set('location', isOther ? '' : value === loc ? '' : loc);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={[fs.chipText, on && fs.chipTextSelected]}>{loc}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {LOCATION_OPTIONS.map((loc) => (
+          <Chip
+            key={loc}
+            label={loc}
+            selected={loc === 'Other' ? otherOpen : !otherOpen && value === loc}
+            onPress={() => {
+              setOtherOpen(loc === 'Other');
+              set('location', loc === 'Other' || value === loc ? '' : loc);
+            }}
+          />
+        ))}
       </View>
       {otherOpen && (
         <TextInput

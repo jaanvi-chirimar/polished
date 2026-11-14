@@ -11,7 +11,7 @@ import {
   ServicesFields,
 } from '@/components/profile/ProfileFields';
 import ScheduleEditor from '@/components/profile/ScheduleEditor';
-import { formStyles as fs } from '@/components/profile/formStyles';
+import { Button, ui as fs } from '@/components/ui';
 import {
   CUSTOMER_PREFERENCES_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
@@ -26,17 +26,7 @@ import { toggleInList } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Step = 'role' | 'basic' | 'style' | 'schedule' | 'pricing';
 
@@ -241,74 +231,32 @@ export default function SetupScreen() {
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={[styles.button, saving && styles.buttonDisabled]}
-          onPress={isLastStep ? handleSubmit : handleNext}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>{isLastStep ? 'Complete Setup' : 'Next'}</Text>
-          )}
-        </TouchableOpacity>
+        <Button title={isLastStep ? 'Complete Setup' : 'Next'} loading={saving} onPress={isLastStep ? handleSubmit : handleNext} />
       </View>
     </KeyboardAvoidingView>
   );
 }
 
+const c = Polish.colors;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Polish.colors.background },
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   content: { padding: Polish.spacing.xl, paddingTop: Polish.spacing.lg, paddingBottom: 40 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Polish.spacing.xl,
-    paddingTop: 56,
-    paddingBottom: Polish.spacing.lg,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Polish.spacing.xl, paddingTop: 56, paddingBottom: Polish.spacing.lg },
   backBtn: { width: 36 },
   progressDots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Polish.colors.borderLight },
-  dotDone: { backgroundColor: Polish.colors.primary, opacity: 0.4 },
-  dotActive: { width: 20, backgroundColor: Polish.colors.primary },
-  title: { ...Polish.typography.title, marginBottom: Polish.spacing.sm, color: Polish.colors.text },
-  subtitle: {
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-    marginBottom: Polish.spacing.xxxl,
-    lineHeight: 22,
-  },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.borderLight },
+  dotDone: { backgroundColor: c.primary, opacity: 0.4 },
+  dotActive: { width: 20, backgroundColor: c.primary },
+  title: { ...Polish.typography.title, marginBottom: Polish.spacing.sm, color: c.text },
+  subtitle: { ...Polish.typography.body, color: c.textSecondary, marginBottom: Polish.spacing.xxxl, lineHeight: 22 },
   section: { marginBottom: Polish.spacing.xl },
   gap: { height: Polish.spacing.lg },
-  roleButton: {
-    borderWidth: 2,
-    borderColor: Polish.colors.border,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.xl,
-    marginBottom: Polish.spacing.lg,
-    backgroundColor: Polish.colors.surface,
-  },
-  roleButtonSelected: { borderColor: Polish.colors.primary, backgroundColor: Polish.colors.accent + '30' },
-  roleButtonText: { fontSize: 20, fontWeight: '600', marginBottom: 8, color: Polish.colors.textSecondary },
-  roleButtonTextSelected: { color: Polish.colors.text },
-  roleDescription: { ...Polish.typography.caption, color: Polish.colors.textSecondary },
-  button: {
-    backgroundColor: Polish.colors.primary,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.lg,
-    alignItems: 'center',
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { ...Polish.typography.button, color: '#fff' },
-  bottomNav: {
-    paddingHorizontal: Polish.spacing.xl,
-    paddingBottom: 36,
-    paddingTop: Polish.spacing.md,
-    backgroundColor: Polish.colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Polish.colors.borderLight,
-  },
+  roleButton: { borderWidth: 2, borderColor: c.border, borderRadius: Polish.radius.md, padding: Polish.spacing.xl, marginBottom: Polish.spacing.lg, backgroundColor: c.surface },
+  roleButtonSelected: { borderColor: c.primary, backgroundColor: c.accent + '30' },
+  roleButtonText: { fontSize: 20, fontWeight: '600', marginBottom: 8, color: c.textSecondary },
+  roleButtonTextSelected: { color: c.text },
+  roleDescription: { ...Polish.typography.caption, color: c.textSecondary },
+  bottomNav: { paddingHorizontal: Polish.spacing.xl, paddingBottom: 36, paddingTop: Polish.spacing.md, borderTopWidth: 1, borderTopColor: c.borderLight },
 });

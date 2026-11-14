@@ -1,4 +1,4 @@
-import Stars from "@/components/Stars";
+import { Button, CenterMessage, Stars, ui } from "@/components/ui";
 import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
@@ -9,17 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { addDoc, collection, doc, onSnapshot, query, Timestamp, updateDoc, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    SectionList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Alert, Modal, SectionList, StyleSheet, Text, TextInput, View } from "react-native";
 
 type BookingsSection = {
   title: string;
@@ -150,143 +140,84 @@ export default function BookingsScreen() {
     if (techUpcoming.length > 0)
       sections.push({ title: "Upcoming (as tech)", data: techUpcoming, type: "tech" });
   }
-  const isEmpty = sections.length === 0;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bookings</Text>
-        <Text style={styles.subtitle}>
-          {isClient && isTech
-            ? "Your bookings and requests"
-            : isTech
+    <View style={[ui.screen, styles.container]}>
+      <Text style={ui.title}>Bookings</Text>
+      <Text style={[ui.caption, styles.subtitle]}>
+        {isClient && isTech
+          ? "Your bookings and requests"
+          : isTech
             ? "Incoming requests and appointments"
             : "Your upcoming and past bookings"}
-        </Text>
-      </View>
+      </Text>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Polish.colors.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      ) : isEmpty ? (
-        <View style={styles.center}>
-          <Ionicons name="calendar-outline" size={48} color={Polish.colors.textMuted} />
-          <Text style={styles.emptyText}>No bookings yet</Text>
-          <Text style={styles.emptySubtext}>
-            {isTech
-              ? "When clients book with you, they'll appear here."
-              : "Book with a nail tech from Home to see them here."}
-          </Text>
-        </View>
+        <CenterMessage loading />
+      ) : sections.length === 0 ? (
+        <CenterMessage
+          icon="calendar-outline"
+          title="No bookings yet"
+          subtitle={isTech ? "When clients book with you, they’ll appear here." : "Book with a nail tech from Home to see them here."}
+        />
       ) : (
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }}
           stickySectionHeadersEnabled={false}
-          renderSectionHeader={({ section }) => (
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-          )}
+          renderSectionHeader={({ section }) => <Text style={[ui.subtitle, styles.sectionTitle]}>{section.title}</Text>}
           renderItem={({ item, section }) => {
-            const isTechPending = section.type === "tech" && item.status === "pending";
-            const isPastClient = section.isPast && section.type === "client";
-            const existingRating = reviewedMap.get(item.id);
-
+            const isRequest = section.type === "tech" && item.status === "pending";
+            const canReview = section.isPast && item.status !== "declined";
+            const rating = reviewedMap.get(item.id);
             return (
-              <View style={[styles.card, isTechPending && styles.cardPending]}>
-                <View style={styles.cardTopRow}>
-                  <Text style={styles.name}>
-                    {item.otherName}
-                  </Text>
-                  {!isTechPending && (
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        item.status === "confirmed" && styles.statusBadgeConfirmed,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusBadgeText,
-                          item.status === "confirmed" && styles.statusBadgeTextConfirmed,
-                        ]}
-                      >
-                        {item.status}
-                      </Text>
-                    </View>
+              <View style={[ui.card, styles.card, isRequest && styles.cardPending]}>
+                <View style={ui.row}>
+                  <Text style={[ui.subtitle, { flex: 1 }]}>{item.otherName}</Text>
+                  {!isRequest && (
+                    <Text style={[styles.badge, item.status === "confirmed" && styles.badgeConfirmed]}>{item.status}</Text>
                   )}
                 </View>
-                <View style={styles.dateRow}>
+                <View style={[ui.row, { gap: 4 }]}>
                   <Ionicons name="calendar-outline" size={14} color={Polish.colors.textMuted} />
-                  <Text style={styles.dateText}>{formatDateTime(item.dateTime)}</Text>
+                  <Text style={ui.body}>{formatDateTime(item.dateTime)}</Text>
                 </View>
-                {item.appointmentType ? (
-                  <Text style={styles.apptTypeText}>{item.appointmentType}</Text>
-                ) : null}
-                {item.note ? (
-                  <Text style={styles.noteText} numberOfLines={2}>
-                    “{item.note}”
-                  </Text>
-                ) : null}
+                {item.appointmentType ? <Text style={[ui.caption, { fontWeight: "600" }]}>{item.appointmentType}</Text> : null}
+                {item.note ? <Text style={[ui.muted, styles.note]} numberOfLines={2}>“{item.note}”</Text> : null}
 
-                {isPastClient && item.status !== "declined" && (
-                  <View style={styles.reviewRow}>
-                    {existingRating !== undefined ? (
-                      <Stars rating={existingRating} size={16} />
+                {canReview && (
+                  <View style={styles.actions}>
+                    {rating !== undefined ? (
+                      <Stars rating={rating} size={16} />
                     ) : (
-                      <TouchableOpacity
-                        style={styles.rateButton}
+                      <Button
+                        small
+                        variant="outline"
+                        icon="star-outline"
+                        title="Leave a review"
                         onPress={() => {
                           setReviewRating(5);
                           setReviewComment("");
-                          setReviewModal({
-                            appointmentId: item.id,
-                            techId: item.techId,
-                            techName: item.otherName,
-                          });
+                          setReviewModal({ appointmentId: item.id, techId: item.techId, techName: item.otherName });
                         }}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="star-outline" size={14} color={Polish.colors.primary} />
-                        <Text style={styles.rateButtonText}>Leave a review</Text>
-                      </TouchableOpacity>
+                      />
                     )}
                   </View>
                 )}
 
-                {isTechPending && item.altTimeRequest ? (
-                  <View style={styles.altTimeRow}>
+                {isRequest && item.altTimeRequest ? (
+                  <View style={[ui.row, styles.note]}>
                     <Ionicons name="time-outline" size={13} color={Polish.colors.primary} />
-                    <Text style={styles.altTimeText}>Requested: {item.altTimeRequest}</Text>
+                    <Text style={[ui.caption, { color: Polish.colors.primary, flex: 1 }]}>Requested: {item.altTimeRequest}</Text>
                   </View>
                 ) : null}
 
-                {isTechPending && (
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={styles.acceptButton}
-                      onPress={() => handleAccept(item)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.acceptButtonText}>Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.messageButton}
-                      onPress={() => handleMessage(item.clientId)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="chatbubble-outline" size={14} color={Polish.colors.primary} />
-                      <Text style={styles.messageButtonText}>Message</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.declineButton}
-                      onPress={() => handleDecline(item.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.declineButtonText}>Decline</Text>
-                    </TouchableOpacity>
+                {isRequest && (
+                  <View style={styles.actions}>
+                    <Button small title="Accept" onPress={() => handleAccept(item)} style={{ flex: 1 }} />
+                    <Button small variant="outline" icon="chatbubble-outline" title="Message" onPress={() => handleMessage(item.clientId)} style={{ flex: 1 }} />
+                    <Button small variant="dangerOutline" title="Decline" onPress={() => handleDecline(item.id)} style={{ flex: 1 }} />
                   </View>
                 )}
               </View>
@@ -295,40 +226,24 @@ export default function BookingsScreen() {
         />
       )}
 
-      <Modal
-        visible={!!reviewModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setReviewModal(null)}
-      >
+      <Modal visible={!!reviewModal} transparent animationType="fade" onRequestClose={() => setReviewModal(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Rate {reviewModal?.techName}</Text>
-            <View style={styles.starsRow}>
+            <Text style={[ui.subtitle, { textAlign: "center" }]}>Rate {reviewModal?.techName}</Text>
+            <View style={{ alignItems: "center", marginVertical: Polish.spacing.xl }}>
               <Stars rating={reviewRating} size={40} onChange={setReviewRating} />
             </View>
             <TextInput
-              style={styles.reviewInput}
+              style={[ui.input, ui.textArea]}
               placeholder="Add a comment (optional)"
               placeholderTextColor={Polish.colors.textMuted}
               value={reviewComment}
               onChangeText={setReviewComment}
               multiline
-              numberOfLines={3}
             />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setReviewModal(null)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, reviewSubmitting && styles.submitButtonDisabled]}
-                onPress={handleSubmitReview}
-                disabled={reviewSubmitting}
-              >
-                <Text style={styles.submitButtonText}>
-                  {reviewSubmitting ? "Submitting..." : "Submit"}
-                </Text>
-              </TouchableOpacity>
+            <View style={styles.actions}>
+              <Button variant="secondary" title="Cancel" onPress={() => setReviewModal(null)} style={{ flex: 1 }} />
+              <Button title="Submit" loading={reviewSubmitting} onPress={handleSubmitReview} style={{ flex: 1 }} />
             </View>
           </View>
         </View>
@@ -338,197 +253,25 @@ export default function BookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Polish.colors.background,
-    paddingHorizontal: Polish.spacing.xl,
-    paddingTop: 56,
-  },
-  header: { marginBottom: Polish.spacing.xxl },
-  title: { ...Polish.typography.title, color: Polish.colors.text },
-  subtitle: { ...Polish.typography.caption, color: Polish.colors.textSecondary, marginTop: 4 },
-  sectionTitle: {
-    ...Polish.typography.subtitle,
-    color: Polish.colors.text,
-    marginTop: Polish.spacing.lg,
-    marginBottom: Polish.spacing.sm,
-  },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  loadingText: {
-    marginTop: Polish.spacing.lg,
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-  },
-  emptyText: {
-    marginTop: Polish.spacing.lg,
-    ...Polish.typography.subtitle,
-    color: Polish.colors.textSecondary,
-  },
-  emptySubtext: {
-    marginTop: Polish.spacing.sm,
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    textAlign: "center",
-  },
-  listContent: { paddingBottom: Polish.spacing.xxxl },
-  card: {
-    backgroundColor: Polish.colors.surface,
-    borderRadius: Polish.radius.lg,
-    padding: Polish.spacing.lg,
-    marginBottom: Polish.spacing.md,
-    borderWidth: 1,
-    borderColor: Polish.colors.borderLight,
-    ...Polish.shadowSm,
-  },
+  container: { paddingHorizontal: Polish.spacing.xl, paddingTop: 56 },
+  subtitle: { marginTop: 4, marginBottom: Polish.spacing.lg },
+  sectionTitle: { marginTop: Polish.spacing.lg, marginBottom: Polish.spacing.sm },
+  card: { marginBottom: Polish.spacing.md, gap: 4 },
   cardPending: { borderColor: Polish.colors.primary + "40", borderWidth: 1.5 },
-  cardTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  name: {
-    ...Polish.typography.subtitle,
-    color: Polish.colors.text,
-    flex: 1,
-    marginRight: Polish.spacing.sm,
-  },
-  statusBadge: {
+  note: { marginTop: Polish.spacing.sm, fontStyle: "italic" },
+  actions: { flexDirection: "row", gap: Polish.spacing.sm, marginTop: Polish.spacing.md },
+  badge: {
+    ...Polish.typography.caption,
+    fontWeight: "600",
+    textTransform: "capitalize",
+    color: Polish.colors.textMuted,
+    backgroundColor: Polish.colors.textMuted + "20",
     paddingHorizontal: Polish.spacing.md,
     paddingVertical: 3,
     borderRadius: Polish.radius.xl,
-    backgroundColor: Polish.colors.textMuted + "20",
+    overflow: "hidden",
   },
-  statusBadgeConfirmed: { backgroundColor: Polish.colors.success + "20" },
-  statusBadgeText: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    textTransform: "capitalize",
-    fontWeight: "600",
-  },
-  statusBadgeTextConfirmed: { color: Polish.colors.success },
-  dateRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 },
-  dateText: { ...Polish.typography.body, color: Polish.colors.textSecondary },
-  noteText: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    marginTop: Polish.spacing.sm,
-    fontStyle: "italic",
-  },
-  apptTypeText: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textSecondary,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  reviewRow: { marginTop: Polish.spacing.md, flexDirection: "row", alignItems: "center" },
-  rateButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: Polish.spacing.md,
-    borderRadius: Polish.radius.lg,
-    borderWidth: 1,
-    borderColor: Polish.colors.primary,
-  },
-  rateButtonText: {
-    ...Polish.typography.caption,
-    color: Polish.colors.primary,
-    fontWeight: "600",
-  },
-  altTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: Polish.spacing.sm },
-  altTimeText: { ...Polish.typography.caption, color: Polish.colors.primary, flex: 1 },
-  actionRow: { flexDirection: "row", gap: Polish.spacing.sm, marginTop: Polish.spacing.md },
-  acceptButton: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.lg,
-    backgroundColor: Polish.colors.primary,
-  },
-  acceptButtonText: { ...Polish.typography.caption, color: "#fff", fontWeight: "600" },
-  messageButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.lg,
-    borderWidth: 1,
-    borderColor: Polish.colors.primary,
-  },
-  messageButtonText: {
-    ...Polish.typography.caption,
-    color: Polish.colors.primary,
-    fontWeight: "600",
-  },
-  declineButton: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.lg,
-    borderWidth: 1,
-    borderColor: Polish.colors.error,
-  },
-  declineButtonText: { ...Polish.typography.caption, color: Polish.colors.error, fontWeight: "600" },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: Polish.spacing.xl,
-  },
-  modalContent: {
-    backgroundColor: Polish.colors.background,
-    borderRadius: Polish.radius.lg,
-    padding: Polish.spacing.xxl,
-    width: "100%",
-    ...Polish.shadow,
-  },
-  modalTitle: {
-    ...Polish.typography.subtitle,
-    color: Polish.colors.text,
-    marginBottom: Polish.spacing.xl,
-    textAlign: "center",
-  },
-  starsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Polish.spacing.md,
-    marginBottom: Polish.spacing.xl,
-  },
-  reviewInput: {
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.lg,
-    ...Polish.typography.body,
-    color: Polish.colors.text,
-    minHeight: 80,
-    textAlignVertical: "top",
-    marginBottom: Polish.spacing.xl,
-    backgroundColor: Polish.colors.surface,
-  },
-  modalActions: { flexDirection: "row", gap: Polish.spacing.md },
-  cancelButton: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: Polish.spacing.lg,
-    borderRadius: Polish.radius.md,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-  },
-  cancelButtonText: { ...Polish.typography.button, color: Polish.colors.textSecondary },
-  submitButton: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: Polish.spacing.lg,
-    borderRadius: Polish.radius.md,
-    backgroundColor: Polish.colors.primary,
-  },
-  submitButtonDisabled: { opacity: 0.6 },
-  submitButtonText: { ...Polish.typography.button, color: "#fff" },
+  badgeConfirmed: { color: Polish.colors.success, backgroundColor: Polish.colors.success + "20" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: Polish.spacing.xl },
+  modalContent: { backgroundColor: Polish.colors.background, borderRadius: Polish.radius.lg, padding: Polish.spacing.xxl, ...Polish.shadow },
 });

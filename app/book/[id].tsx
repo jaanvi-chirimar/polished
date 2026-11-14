@@ -1,3 +1,4 @@
+import { BackHeader, Button, Chip, ui } from "@/components/ui";
 import { APPOINTMENT_TYPES } from "@/constants/nailTechOptions";
 import { Polish } from "@/constants/theme";
 import { PricingTierKey, useAuth } from "@/contexts/AuthContext";
@@ -7,17 +8,8 @@ import { dateAtTime, dayName, formatTime, generateSlots } from "@/lib/time";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Keyboard,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DAYS_AHEAD = 21;
@@ -149,190 +141,100 @@ export default function BookScreen() {
     }
   }
 
-  const topPadding = insets.top + 24;
-  const hasPolicies = techReschedulePolicy || techLatePolicy;
   const hasSchedule = Object.keys(techSchedule).length > 0;
 
   return (
-    <View style={[styles.container, { paddingTop: topPadding }]}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={24} color={Polish.colors.text} />
-      </TouchableOpacity>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="calendar-outline" size={28} color={Polish.colors.primary} />
-          </View>
-          <Text style={styles.title}>
-            Book with {tech?.name ?? name ?? "Nail Tech"}
-          </Text>
-        </View>
-
+    <View style={[ui.screen, { paddingTop: insets.top + 24, paddingHorizontal: Polish.spacing.xl }]}>
+      <BackHeader title={`Book with ${tech?.name ?? name ?? "Nail Tech"}`} />
+      <ScrollView contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {(techTools.length > 0 || techDesigns.length > 0) && (
-          <View style={styles.section}>
-            {techTools.length > 0 && (
-              <>
-                <Text style={styles.label}>Tools / Techniques</Text>
-                <Text style={styles.techTags}>{techTools.join(" · ")}</Text>
-              </>
-            )}
-            {techDesigns.length > 0 && (
-              <>
-                <Text style={[styles.label, techTools.length > 0 && { marginTop: Polish.spacing.lg }]}>Designs</Text>
-                <Text style={styles.techTags}>{techDesigns.join(" · ")}</Text>
-              </>
-            )}
-          </View>
+          <Section label="Services">
+            {techTools.length > 0 && <Text style={ui.body}>{techTools.join(" · ")}</Text>}
+            {techDesigns.length > 0 && <Text style={[ui.body, { marginTop: Polish.spacing.sm }]}>{techDesigns.join(" · ")}</Text>}
+          </Section>
         )}
 
-        {/* Appointment Type */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Service type</Text>
-          <View style={styles.typeRow}>
-            {(APPOINTMENT_TYPES as readonly string[]).map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[styles.typeButton, appointmentType === type && styles.typeButtonSelected]}
-                onPress={() => setAppointmentType(type)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.typeButtonText, appointmentType === type && styles.typeButtonTextSelected]}>
-                  {type}
-                </Text>
-              </TouchableOpacity>
+        <Section label="Service type">
+          <View style={ui.chipRow}>
+            {APPOINTMENT_TYPES.map((type) => (
+              <Chip key={type} label={type} selected={appointmentType === type} onPress={() => setAppointmentType(type)} />
             ))}
           </View>
-        </View>
+        </Section>
 
-        {/* Pricing */}
-        {techUsePricingTiers ? (
-          techPricingTiers.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.label}>Select a tier</Text>
-              {techPricingTiers.map(({ key, tier }) => (
+        {techUsePricingTiers && techPricingTiers.length > 0 && (
+          <Section label="Select a tier">
+            {techPricingTiers.map(({ key, tier }) => {
+              const on = selectedTierKey === key;
+              return (
                 <TouchableOpacity
                   key={key}
-                  style={[styles.tierOption, selectedTierKey === key && styles.tierOptionSelected]}
-                  onPress={() => setSelectedTierKey(selectedTierKey === key ? "" : key)}
+                  style={[ui.card, ui.row, styles.option, on && styles.optionSelected]}
+                  onPress={() => setSelectedTierKey(on ? "" : key)}
                   activeOpacity={0.8}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.tierName, selectedTierKey === key && styles.tierNameSelected]}>
-                      {tier.name}
-                    </Text>
-                    {tier.description ? <Text style={styles.tierDesc}>{tier.description}</Text> : null}
+                    <Text style={[ui.label, { marginBottom: 0 }, on && styles.selectedText]}>{tier.name}</Text>
+                    {tier.description ? <Text style={ui.muted}>{tier.description}</Text> : null}
                   </View>
-                  <Text style={[styles.tierPrice, selectedTierKey === key && styles.tierPriceSelected]}>
-                    ${tier.price}
-                  </Text>
+                  <Text style={[styles.price, on && styles.selectedText]}>${tier.price}</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          )
-        ) : (
-          techPricingDescription ? (
-            <View style={styles.section}>
-              <Text style={styles.label}>Pricing</Text>
-              <Text style={styles.techTags}>{techPricingDescription}</Text>
-            </View>
-          ) : null
+              );
+            })}
+          </Section>
         )}
+        {!techUsePricingTiers && techPricingDescription ? (
+          <Section label="Pricing">
+            <Text style={ui.body}>{techPricingDescription}</Text>
+          </Section>
+        ) : null}
 
-        {/* Gel removal add-on */}
         {techRemovalAddOn && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.removalRow}
-              onPress={() => setAddRemoval(!addRemoval)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.removalCheckbox, addRemoval && styles.removalCheckboxChecked]}>
-                {addRemoval && <Ionicons name="checkmark" size={14} color="#fff" />}
-              </View>
-              <Text style={styles.removalLabel}>Add gel removal</Text>
-              <Text style={styles.removalPrice}>+${techRemovalAddOn.price}</Text>
+          <Section>
+            <TouchableOpacity style={ui.row} onPress={() => setAddRemoval(!addRemoval)} activeOpacity={0.8}>
+              <Ionicons name={addRemoval ? "checkbox" : "square-outline"} size={22} color={Polish.colors.primary} />
+              <Text style={[ui.body, { flex: 1, color: Polish.colors.text }]}>Add gel removal</Text>
+              <Text style={styles.price}>+${techRemovalAddOn.price}</Text>
             </TouchableOpacity>
-          </View>
+          </Section>
         )}
 
-        {/* Date & Time */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Select a date</Text>
+        <Section label="Select a date">
           {!hasSchedule ? (
-            <Text style={styles.noScheduleText}>This tech hasn’t set their availability yet.</Text>
+            <Text style={ui.body}>This tech hasn’t set their availability yet.</Text>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateScroll}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ui.row}>
               {upcomingDates.map((date, i) => {
                 const day = dayName(date);
-                const available = !!techSchedule[day]?.length;
-                const isSelected = selectedDate?.toDateString() === date.toDateString();
-                const isToday = i === 0;
+                const short = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
                 return (
-                  <TouchableOpacity
-                    key={i}
-                    style={[
-                      styles.dateChip,
-                      isSelected && styles.dateChipSelected,
-                      !available && styles.dateChipDisabled,
-                    ]}
+                  <Chip
+                    key={short}
+                    label={`${i === 0 ? "Today" : day.slice(0, 3)}\n${short}`}
+                    selected={selectedDate?.toDateString() === date.toDateString()}
+                    disabled={!techSchedule[day]?.length}
                     onPress={() => {
-                      if (!available) return;
                       setSelectedDate(date);
                       setSelectedSlot(null);
                     }}
-                    activeOpacity={available ? 0.8 : 1}
-                  >
-                    <Text style={[
-                      styles.dateChipDay,
-                      isSelected && styles.dateChipTextSelected,
-                      !available && styles.dateChipTextDisabled,
-                    ]}>
-                      {isToday ? 'Today' : day.slice(0, 3)}
-                    </Text>
-                    <Text style={[
-                      styles.dateChipNum,
-                      isSelected && styles.dateChipTextSelected,
-                      !available && styles.dateChipTextDisabled,
-                    ]}>
-                      {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </ScrollView>
           )}
-
           {selectedDate && availableSlots.length > 0 && (
-            <View style={{ marginTop: Polish.spacing.lg }}>
-              <Text style={[styles.label, { marginBottom: Polish.spacing.md }]}>Select a time</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.slotRow}>
-                  {availableSlots.map((slot) => (
-                    <TouchableOpacity
-                      key={slot}
-                      style={[styles.slotChip, selectedSlot === slot && styles.slotChipSelected]}
-                      onPress={() => setSelectedSlot(slot)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.slotText, selectedSlot === slot && styles.slotTextSelected]}>
-                        {formatTime(slot)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+            <>
+              <Text style={[ui.label, ui.spaced]}>Select a time</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ui.row}>
+                {availableSlots.map((slot) => (
+                  <Chip key={slot} label={formatTime(slot)} selected={selectedSlot === slot} onPress={() => setSelectedSlot(slot)} />
+                ))}
               </ScrollView>
-            </View>
+            </>
           )}
-        </View>
+        </Section>
 
-        {/* Notes */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Notes (optional)</Text>
+        <Section label="Notes (optional)">
           <TextInput
             value={note}
             onChangeText={setNote}
@@ -340,64 +242,36 @@ export default function BookScreen() {
             placeholderTextColor={Polish.colors.textMuted}
             onSubmitEditing={() => Keyboard.dismiss()}
             submitBehavior="blurAndSubmit"
-            style={styles.textArea}
+            style={[ui.input, ui.textArea]}
             multiline
           />
-        </View>
+        </Section>
 
-        {/* Alternative time request */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Can’t find the right time?</Text>
+        <Section label="Can’t find the right time?">
           <TextInput
             value={altTimeRequest}
             onChangeText={setAltTimeRequest}
             placeholder="Describe when you're free (e.g. 'weekday evenings after 6pm')"
             placeholderTextColor={Polish.colors.textMuted}
-            style={styles.textArea}
+            style={[ui.input, ui.textArea]}
             multiline
-            numberOfLines={2}
           />
-        </View>
+        </Section>
 
-        {/* Policies */}
-        {hasPolicies ? (
-          <View style={styles.policiesBox}>
-            <Text style={styles.policiesTitle}>Policies</Text>
-            {techReschedulePolicy ? (
-              <View style={styles.policyItem}>
-                <Text style={styles.policyLabel}>Reschedule</Text>
-                <Text style={styles.policyText}>{techReschedulePolicy}</Text>
-              </View>
-            ) : null}
-            {techLatePolicy ? (
-              <View style={styles.policyItem}>
-                <Text style={styles.policyLabel}>Late</Text>
-                <Text style={styles.policyText}>{techLatePolicy}</Text>
-              </View>
-            ) : null}
+        {techReschedulePolicy || techLatePolicy ? (
+          <View style={[ui.card, { marginBottom: Polish.spacing.xxl }]}>
+            <Text style={ui.label}>Policies</Text>
+            {techReschedulePolicy ? <Text style={ui.caption}>Reschedule: {techReschedulePolicy}</Text> : null}
+            {techLatePolicy ? <Text style={ui.caption}>Late: {techLatePolicy}</Text> : null}
           </View>
         ) : null}
 
-        <TouchableOpacity
-          style={[styles.button, submitting && styles.buttonDisabled]}
-          onPress={handleConfirm}
-          disabled={submitting}
-          activeOpacity={0.85}
-        >
-          {submitting ? (
-            <Text style={styles.buttonText}>Booking...</Text>
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />
-              <Text style={styles.buttonText}>Confirm Booking</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <Button icon="checkmark-circle-outline" title="Confirm Booking" loading={submitting} onPress={handleConfirm} />
 
         {confirmed && (
-          <View style={styles.confirmBanner}>
+          <View style={[ui.row, styles.confirmed]}>
             <Ionicons name="checkmark-circle" size={24} color={Polish.colors.success} />
-            <Text style={styles.confirmText}>Booking requested!</Text>
+            <Text style={[ui.label, { marginBottom: 0, color: Polish.colors.success }]}>Booking requested!</Text>
           </View>
         )}
       </ScrollView>
@@ -405,140 +279,25 @@ export default function BookScreen() {
   );
 }
 
+function Section({ label, children }: { label?: string; children: React.ReactNode }) {
+  return (
+    <View style={{ marginBottom: Polish.spacing.xxl }}>
+      {label ? <Text style={ui.label}>{label}</Text> : null}
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Polish.colors.background },
-  backButton: { paddingHorizontal: Polish.spacing.lg, paddingVertical: Polish.spacing.sm, alignSelf: 'flex-start' },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: Polish.spacing.xl, paddingTop: Polish.spacing.xl, paddingBottom: Polish.spacing.xxxl },
-  header: { alignItems: "center", marginBottom: Polish.spacing.xxl },
-  headerIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: Polish.radius.lg,
-    backgroundColor: Polish.colors.accent + "50",
-    alignItems: "center",
+  option: { marginBottom: Polish.spacing.sm },
+  optionSelected: { borderColor: Polish.colors.primary, borderWidth: 2 },
+  selectedText: { color: Polish.colors.primary },
+  price: { ...Polish.typography.bodyMedium, color: Polish.colors.primary, fontWeight: "700" },
+  confirmed: {
     justifyContent: "center",
-    marginBottom: Polish.spacing.lg,
-  },
-  title: { ...Polish.typography.title, color: Polish.colors.text, textAlign: "center" },
-  section: { marginBottom: Polish.spacing.xxl },
-  label: { ...Polish.typography.label, color: Polish.colors.text, marginBottom: Polish.spacing.md },
-  typeRow: { flexDirection: "row", flexWrap: "wrap", gap: Polish.spacing.sm },
-  typeButton: {
-    paddingHorizontal: Polish.spacing.md,
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.xl,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
-  },
-  typeButtonSelected: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  typeButtonText: { ...Polish.typography.caption, color: Polish.colors.textSecondary, fontWeight: "600" },
-  typeButtonTextSelected: { color: "#fff" },
-  tierOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Polish.spacing.lg,
-    borderRadius: Polish.radius.md,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
-    marginBottom: Polish.spacing.sm,
-  },
-  tierOptionSelected: { borderColor: Polish.colors.primary, borderWidth: 2, backgroundColor: Polish.colors.primary + "08" },
-  tierName: { ...Polish.typography.bodyMedium, color: Polish.colors.text },
-  tierNameSelected: { color: Polish.colors.primary },
-  tierDesc: { ...Polish.typography.caption, color: Polish.colors.textMuted, marginTop: 2 },
-  tierPrice: { ...Polish.typography.bodyMedium, color: Polish.colors.textSecondary, fontWeight: "700" },
-  tierPriceSelected: { color: Polish.colors.primary },
-  noScheduleText: { ...Polish.typography.body, color: Polish.colors.textMuted, fontStyle: 'italic' },
-  dateScroll: { marginBottom: Polish.spacing.sm },
-  dateChip: {
-    alignItems: 'center',
-    paddingHorizontal: Polish.spacing.md,
-    paddingVertical: Polish.spacing.md,
-    borderRadius: Polish.radius.md,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
-    marginRight: Polish.spacing.sm,
-    minWidth: 64,
-  },
-  dateChipSelected: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  dateChipDisabled: { backgroundColor: Polish.colors.borderLight, borderColor: Polish.colors.borderLight },
-  dateChipDay: { ...Polish.typography.caption, fontWeight: '600', color: Polish.colors.text, marginBottom: 2 },
-  dateChipNum: { ...Polish.typography.caption, color: Polish.colors.textSecondary },
-  dateChipTextSelected: { color: '#fff' },
-  dateChipTextDisabled: { color: Polish.colors.textMuted },
-  slotRow: { flexDirection: 'row', gap: Polish.spacing.sm },
-  slotChip: {
-    paddingHorizontal: Polish.spacing.md,
-    paddingVertical: Polish.spacing.sm,
-    borderRadius: Polish.radius.xl,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
-  },
-  slotChipSelected: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  slotText: { ...Polish.typography.caption, color: Polish.colors.text, fontWeight: '500' },
-  slotTextSelected: { color: '#fff' },
-  textArea: {
-    ...Polish.typography.body,
-    padding: Polish.spacing.lg,
-    borderRadius: Polish.radius.md,
-    backgroundColor: Polish.colors.surface,
-    borderWidth: 1,
-    borderColor: Polish.colors.border,
-    color: Polish.colors.text,
-    minHeight: 96,
-    textAlignVertical: "top",
-  },
-  policiesBox: {
-    backgroundColor: Polish.colors.surface,
-    borderRadius: Polish.radius.md,
-    padding: Polish.spacing.lg,
-    borderWidth: 1,
-    borderColor: Polish.colors.borderLight,
-    marginBottom: Polish.spacing.xxl,
-  },
-  policiesTitle: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Polish.spacing.md,
-  },
-  policyItem: { marginBottom: Polish.spacing.sm },
-  policyLabel: { ...Polish.typography.caption, color: Polish.colors.textSecondary, fontWeight: "600", marginBottom: 2 },
-  policyText: { ...Polish.typography.caption, color: Polish.colors.text, lineHeight: 18 },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Polish.spacing.sm,
-    paddingVertical: Polish.spacing.lg,
-    borderRadius: Polish.radius.lg,
-    backgroundColor: Polish.colors.primary,
-    ...Polish.shadow,
-  },
-  buttonDisabled: { opacity: 0.7 },
-  buttonText: { ...Polish.typography.button, color: "#fff" },
-  confirmBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Polish.spacing.sm,
     marginTop: Polish.spacing.xl,
     padding: Polish.spacing.lg,
     borderRadius: Polish.radius.md,
     backgroundColor: Polish.colors.success + "18",
   },
-  confirmText: { ...Polish.typography.bodyMedium, color: Polish.colors.success },
-  techTags: { ...Polish.typography.body, color: Polish.colors.textSecondary, lineHeight: 22 },
-  removalRow: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.md },
-  removalCheckbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Polish.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: Polish.colors.surface },
-  removalCheckboxChecked: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  removalLabel: { ...Polish.typography.body, color: Polish.colors.text, flex: 1 },
-  removalPrice: { ...Polish.typography.bodyMedium, color: Polish.colors.primary, fontWeight: '700' },
 });

@@ -1,142 +1,76 @@
+import { CenterMessage, ui } from "@/components/ui";
 import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
-import { getUserName } from "@/lib/utils";
-import { Ionicons } from "@expo/vector-icons";
+import { getUserName, otherParticipant } from "@/lib/utils";
 import { router } from "expo-router";
-import {
-    collection,
-    onSnapshot,
-    query,
-    where,
-} from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-type Thread = {
-  id: string;
-  otherUserId: string;
-  otherUserName: string;
-  lastMessage: string;
-  lastMessageAt: Date | null;
-};
+type Thread = { id: string; otherName: string; lastMessage: string; lastMessageAt: Date | null };
 
 export default function InboxListScreen() {
   const { user } = useAuth();
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [threads, setThreads] = useState<Thread[] | null>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
-
-    const q = query(
-      collection(db, "threads"),
-      where("participantIds", "array-contains", user.uid)
-    );
-
-    const unsubscribe = onSnapshot(
+    const q = query(collection(db, "threads"), where("participantIds", "array-contains", user.uid));
+    return onSnapshot(
       q,
       async (snapshot) => {
-        const list: Thread[] = await Promise.all(
-          snapshot.docs.map(async (d) => {
-            const data = d.data();
-            const participantIds = (data.participantIds as string[]) || [];
-            const otherId =
-              participantIds[0] === user.uid ? participantIds[1] : participantIds[0];
-            const lastAt = data.lastMessageAt?.toDate?.() ?? null;
-            return {
-              id: d.id,
-              otherUserId: otherId,
-              otherUserName: await getUserName(otherId),
-              lastMessage: (data.lastMessage as string) || "",
-              lastMessageAt: lastAt,
-            };
-          })
+        const list = await Promise.all(
+          snapshot.docs.map(async (d) => ({
+            id: d.id,
+            otherName: await getUserName(otherParticipant(d.id, user.uid)),
+            lastMessage: d.data().lastMessage || "",
+            lastMessageAt: d.data().lastMessageAt?.toDate?.() ?? null,
+          }))
         );
-        list.sort((a, b) => {
-          const ta = a.lastMessageAt?.getTime() ?? 0;
-          const tb = b.lastMessageAt?.getTime() ?? 0;
-          return tb - ta;
-        });
-        setThreads(list);
-        setLoading(false);
+        setThreads(list.sort((a, b) => (b.lastMessageAt?.getTime() ?? 0) - (a.lastMessageAt?.getTime() ?? 0)));
       },
       (err) => {
         console.error("Inbox threads listener:", err);
-        setLoading(false);
+        setThreads([]);
       }
     );
-
-    return () => unsubscribe();
   }, [user?.uid]);
 
-  if (!user) return null;
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Inbox</Text>
-        <Text style={styles.subtitle}>Messages</Text>
-      </View>
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Polish.colors.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+    <View style={[ui.screen, styles.container]}>
+      <Text style={ui.title}>Inbox</Text>
+      <Text style={[ui.caption, styles.subtitle]}>Messages</Text>
+      {!threads ? (
+        <CenterMessage loading />
       ) : threads.length === 0 ? (
-        <View style={styles.center}>
-          <Ionicons
-            name="chatbubbles-outline"
-            size={48}
-            color={Polish.colors.textMuted}
-          />
-          <Text style={styles.emptyText}>No conversations yet</Text>
-          <Text style={styles.emptySubtext}>
-            Message a nail tech from their profile or start a chat after booking.
-          </Text>
-        </View>
+        <CenterMessage
+          icon="chatbubbles-outline"
+          title="No conversations yet"
+          subtitle="Message a nail tech from their profile or start a chat after booking."
+        />
       ) : (
         <FlatList
           data={threads}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.card}
+              style={[ui.card, ui.row, styles.card]}
               activeOpacity={0.7}
               onPress={() => router.push(`/(tabs)/inbox/chat/${item.id}`)}
             >
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.otherUserName.charAt(0).toUpperCase()}
-                </Text>
+                <Text style={[ui.subtitle, { color: Polish.colors.primary }]}>{item.otherName.charAt(0).toUpperCase()}</Text>
               </View>
-              <View style={styles.cardBody}>
-                <View style={styles.cardTopRow}>
-                  <Text style={styles.name} numberOfLines={1}>{item.otherUserName}</Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={ui.row}>
+                  <Text style={[ui.subtitle, { flex: 1 }]} numberOfLines={1}>{item.otherName}</Text>
                   {item.lastMessageAt ? (
-                    <Text style={styles.time}>
-                      {item.lastMessageAt.toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </Text>
+                    <Text style={ui.muted}>{item.lastMessageAt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</Text>
                   ) : null}
                 </View>
-                {item.lastMessage ? (
-                  <Text style={styles.preview} numberOfLines={1}>
-                    {item.lastMessage}
-                  </Text>
-                ) : (
-                  <Text style={styles.previewEmpty}>No messages yet</Text>
-                )}
+                <Text style={ui.body} numberOfLines={1}>{item.lastMessage || "No messages yet"}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -147,102 +81,8 @@ export default function InboxListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Polish.colors.background,
-    paddingHorizontal: Polish.spacing.xl,
-    paddingTop: 56,
-  },
-  header: {
-    marginBottom: Polish.spacing.xxl,
-  },
-  title: {
-    ...Polish.typography.title,
-    color: Polish.colors.text,
-  },
-  subtitle: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textSecondary,
-    marginTop: 4,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingText: {
-    marginTop: Polish.spacing.lg,
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-  },
-  emptyText: {
-    marginTop: Polish.spacing.lg,
-    ...Polish.typography.subtitle,
-    color: Polish.colors.textSecondary,
-    textAlign: "center",
-  },
-  emptySubtext: {
-    marginTop: Polish.spacing.sm,
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    textAlign: "center",
-  },
-  listContent: {
-    paddingBottom: Polish.spacing.xxxl,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Polish.colors.surface,
-    borderRadius: Polish.radius.lg,
-    padding: Polish.spacing.lg,
-    marginBottom: Polish.spacing.md,
-    borderWidth: 1,
-    borderColor: Polish.colors.borderLight,
-    ...Polish.shadowSm,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Polish.colors.accent + "40",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Polish.spacing.md,
-    flexShrink: 0,
-  },
-  avatarText: {
-    ...Polish.typography.subtitle,
-    color: Polish.colors.primary,
-  },
-  cardBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  cardTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-  name: {
-    ...Polish.typography.subtitle,
-    color: Polish.colors.text,
-    flex: 1,
-    marginRight: Polish.spacing.sm,
-  },
-  preview: {
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-  },
-  previewEmpty: {
-    ...Polish.typography.body,
-    color: Polish.colors.textMuted,
-    fontStyle: "italic",
-  },
-  time: {
-    ...Polish.typography.caption,
-    color: Polish.colors.textMuted,
-    flexShrink: 0,
-  },
+  container: { paddingHorizontal: Polish.spacing.xl, paddingTop: 56 },
+  subtitle: { marginTop: 4, marginBottom: Polish.spacing.xxl },
+  card: { marginBottom: Polish.spacing.md, gap: Polish.spacing.md },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Polish.colors.accent + "40", alignItems: "center", justifyContent: "center" },
 });
