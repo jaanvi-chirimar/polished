@@ -2,7 +2,7 @@ import { db } from '@/firebase/config';
 import { getUserName } from '@/lib/utils';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
-export type AppointmentStatus = 'pending' | 'confirmed' | 'declined';
+type AppointmentStatus = 'pending' | 'confirmed' | 'declined';
 
 export type Appointment = {
   id: string;

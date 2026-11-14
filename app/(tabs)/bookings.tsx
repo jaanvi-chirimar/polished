@@ -4,8 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { Appointment, byDateAsc, byDateDesc, subscribeToAppointments } from "@/lib/appointments";
 import { createCalendarEvent, getValidAccessToken } from "@/lib/googleCalendar";
-import { getThreadId } from "@/lib/threadId";
-import { buildFullName, formatDateTime } from "@/lib/utils";
+import { buildFullName, formatDateTime, getThreadId } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { addDoc, collection, doc, onSnapshot, query, Timestamp, updateDoc, where } from "firebase/firestore";
@@ -62,7 +61,7 @@ export default function BookingsScreen() {
 
   function handleMessage(clientId: string) {
     if (!user?.uid) return;
-    router.push(`/(tabs)/inbox/chat/${getThreadId(user.uid, clientId)}` as any);
+    router.push(`/(tabs)/inbox/chat/${getThreadId(user.uid, clientId)}`);
   }
 
   async function handleSubmitReview() {

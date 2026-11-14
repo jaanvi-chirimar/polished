@@ -3,9 +3,8 @@ import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { enabledTiers, fetchTech, Tech } from "@/lib/techs";
-import { getThreadId } from "@/lib/threadId";
 import { formatSchedule } from "@/lib/time";
-import { getUserName } from "@/lib/utils";
+import { getThreadId, getUserName } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -93,12 +92,12 @@ export default function TechProfile() {
 
   function handleBookPress() {
     if (!id) return;
-    router.push(`/book/${encodeURIComponent(id)}?name=${encodeURIComponent(techName)}` as any);
+    router.push({ pathname: "/book/[id]", params: { id, name: techName } });
   }
 
   function handleMessagePress() {
     if (!id || !user?.uid) return;
-    router.push(`/(tabs)/inbox/chat/${getThreadId(user.uid, id)}` as any);
+    router.push(`/(tabs)/inbox/chat/${getThreadId(user.uid, id)}`);
   }
 
   const topPadding = insets.top + 24;
@@ -119,7 +118,7 @@ export default function TechProfile() {
         <Text style={styles.headerTitle}>Profile</Text>
         {isOwnProfile ? (
           <TouchableOpacity
-            onPress={() => router.push("/(tabs)/profile" as any)}
+            onPress={() => router.push("/(tabs)/profile")}
             style={styles.editButton}
             activeOpacity={0.7}
           >
@@ -352,15 +351,6 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     marginBottom: Polish.spacing.xxl,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Polish.colors.accent + "50",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Polish.spacing.lg,
   },
   title: {
     ...Polish.typography.title,

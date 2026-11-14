@@ -29,7 +29,7 @@ Polish connects Cornell nail techs with students who want their nails done. Cust
 | `lib/appointments.ts` | Live appointment lists with the other person's name filled in. |
 | `lib/techs.ts` | Loading a tech and reading their pricing tiers. |
 | `lib/time.ts` | `"HH:MM"` helpers, 30-minute slots, schedule summaries. |
-| `lib/` (other) | `utils` (names, dates), `googleCalendar`, `portfolio` (photo upload), `threadId`. |
+| `lib/` (other) | `utils` (names, dates, chat thread IDs), `googleCalendar`, `portfolio` (photo upload). |
 | `constants/theme.ts` | Colors, spacing, type. Use these instead of hard-coded values. |
 | `constants/nailTechOptions.ts` | Every option list (locations, tools, designs, payment methods, tiers). |
 

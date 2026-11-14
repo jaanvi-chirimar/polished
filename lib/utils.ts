@@ -33,6 +33,16 @@ export function formatDateTime(dt: Date): string {
   })} at ${dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
 
+/** Chat thread ID for two users: their uids sorted and joined, so both always get the same thread. */
+export function getThreadId(uid1: string, uid2: string): string {
+  return [uid1, uid2].sort().join('_');
+}
+
+/** The other person's uid in a chat thread. */
+export function otherParticipant(threadId: string, myUid: string): string {
+  return threadId.split('_').find((id) => id !== myUid) ?? myUid;
+}
+
 /** Adds the item if missing, removes it if present. */
 export function toggleInList<T>(list: T[], item: T): T[] {
   return list.includes(item) ? list.filter((i) => i !== item) : [...list, item];

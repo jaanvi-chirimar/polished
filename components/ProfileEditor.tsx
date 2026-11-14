@@ -418,7 +418,7 @@ export default function ProfileEditor() {
       )}
 
       {!editing && isCustomer && !isTech && (
-        <TouchableOpacity style={styles.becomeTechCard} onPress={() => router.push('/apply' as any)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.becomeTechCard} onPress={() => router.push('/apply')} activeOpacity={0.85}>
           <View style={styles.becomeTechIcon}>
             <Ionicons name="sparkles" size={22} color={Polish.colors.primary} />
           </View>

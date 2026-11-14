@@ -10,7 +10,6 @@ export const Polish = {
   colors: {
     background: '#FAF9F7',
     surface: '#FFFFFF',
-    surfaceElevated: '#FFFFFF',
     primary: '#C97B84',
     primaryDark: '#B05D67',
     accent: '#E8B4BC',
@@ -42,7 +41,6 @@ export const Polish = {
   },
   typography: {
     title: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.5 },
-    titleSmall: { fontSize: 22, fontWeight: '700' as const },
     subtitle: { fontSize: 18, fontWeight: '600' as const },
     body: { fontSize: 16, fontWeight: '400' as const },
     bodyMedium: { fontSize: 16, fontWeight: '500' as const },

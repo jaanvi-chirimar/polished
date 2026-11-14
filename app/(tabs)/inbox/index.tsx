@@ -29,15 +29,12 @@ type Thread = {
 };
 
 export default function InboxListScreen() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.uid) {
-      if (!authLoading) router.replace("/auth" as any);
-      return;
-    }
+    if (!user?.uid) return;
 
     const q = query(
       collection(db, "threads"),
@@ -78,9 +75,9 @@ export default function InboxListScreen() {
     );
 
     return () => unsubscribe();
-  }, [user?.uid, authLoading]);
+  }, [user?.uid]);
 
-  if (authLoading || !user) return null;
+  if (!user) return null;
 
   return (
     <View style={styles.container}>
@@ -114,7 +111,7 @@ export default function InboxListScreen() {
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.7}
-              onPress={() => router.push(`/(tabs)/inbox/chat/${item.id}` as any)}
+              onPress={() => router.push(`/(tabs)/inbox/chat/${item.id}`)}
             >
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>

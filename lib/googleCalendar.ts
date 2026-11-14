@@ -3,13 +3,13 @@ import { deleteField, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!;
 
-export type GoogleCalendarTokens = {
+type GoogleCalendarTokens = {
   accessToken: string;
   refreshToken: string;
   expiresAt: number; // Unix ms
 };
 
-export type AppointmentForCalendar = {
+type AppointmentForCalendar = {
   dateTime: Date;
   appointmentType?: string;
   note?: string;
@@ -109,20 +109,6 @@ export async function createCalendarEvent(
   } catch (err) {
     console.warn('createCalendarEvent error:', err);
     return null;
-  }
-}
-
-export async function deleteCalendarEvent(
-  accessToken: string,
-  eventId: string
-): Promise<void> {
-  try {
-    await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
-      { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-  } catch (err) {
-    console.warn('deleteCalendarEvent error:', err);
   }
 }
 

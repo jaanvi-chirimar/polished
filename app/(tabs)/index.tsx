@@ -51,7 +51,7 @@ function TechStatusCard({ techStatus }: { techStatus: TechStatus }) {
   return (
     <TouchableOpacity
       style={styles.statusCard}
-      onPress={() => router.push("/(tabs)/bookings" as any)}
+      onPress={() => router.push("/(tabs)/bookings")}
       activeOpacity={0.85}
     >
       <Ionicons
@@ -157,7 +157,7 @@ export default function HomeScreen() {
   }, [techs, searchQuery, filterLocation, filterService, filterAvailableToday, today]);
 
   const handleProfilePress = () => {
-    router.push("/(tabs)/profile" as any);
+    router.push("/(tabs)/profile");
   };
   
   if (!user) {
@@ -201,12 +201,12 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <TouchableOpacity style={styles.statCard} onPress={() => router.push("/(tabs)/bookings" as any)} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.statCard} onPress={() => router.push("/(tabs)/bookings")} activeOpacity={0.85}>
             <Text style={styles.statNumber}>{techStatus.pendingCount}</Text>
             <Text style={styles.statLabel}>Pending{"\n"}Requests</Text>
             <Ionicons name="time-outline" size={18} color={Polish.colors.primary} style={styles.statIcon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.statCard} onPress={() => router.push("/(tabs)/bookings" as any)} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.statCard} onPress={() => router.push("/(tabs)/bookings")} activeOpacity={0.85}>
             <Text style={styles.statNumber}>{techStatus.confirmedCount}</Text>
             <Text style={styles.statLabel}>Upcoming{"\n"}Confirmed</Text>
             <Ionicons name="checkmark-circle-outline" size={18} color={Polish.colors.success} style={styles.statIcon} />
@@ -224,11 +224,11 @@ export default function HomeScreen() {
 
         <Text style={styles.quickActionsLabel}>Quick Actions</Text>
         <View style={styles.quickActionsRow}>
-          <TouchableOpacity style={styles.quickAction} onPress={() => router.push("/(tabs)/bookings" as any)} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.quickAction} onPress={() => router.push("/(tabs)/bookings")} activeOpacity={0.85}>
             <Ionicons name="calendar-outline" size={22} color={Polish.colors.primary} />
             <Text style={styles.quickActionText}>Bookings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction} onPress={() => router.push("/(tabs)/inbox" as any)} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.quickAction} onPress={() => router.push("/(tabs)/inbox")} activeOpacity={0.85}>
             <Ionicons name="mail-outline" size={22} color={Polish.colors.primary} />
             <Text style={styles.quickActionText}>Messages</Text>
           </TouchableOpacity>
@@ -449,7 +449,7 @@ export default function HomeScreen() {
               href={{
                 pathname: "/tech/[id]",
                 params: { id: item.id },
-              } as any}
+              }}
               asChild
             >
               <TouchableOpacity style={styles.card} activeOpacity={0.85}>
@@ -594,24 +594,6 @@ const styles = StyleSheet.create({
     ...Polish.typography.body,
     color: Polish.colors.text,
   },
-  techOnlyEmpty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Polish.spacing.xxl,
-  },
-  techOnlyEmptyTitle: {
-    ...Polish.typography.title,
-    color: Polish.colors.text,
-    marginTop: Polish.spacing.lg,
-    textAlign: "center",
-  },
-  techOnlyEmptyText: {
-    ...Polish.typography.body,
-    color: Polish.colors.textSecondary,
-    marginTop: Polish.spacing.sm,
-    textAlign: "center",
-  },
   inspirationRow: {
     marginBottom: Polish.spacing.lg,
   },
@@ -653,12 +635,6 @@ const styles = StyleSheet.create({
     gap: Polish.spacing.sm,
     paddingBottom: Polish.spacing.md,
     paddingRight: Polish.spacing.xl,
-  },
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Polish.spacing.sm,
-    marginBottom: Polish.spacing.lg,
   },
   clearFiltersBtn: {
     alignSelf: "flex-start",

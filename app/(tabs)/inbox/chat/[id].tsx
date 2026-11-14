@@ -1,20 +1,10 @@
 import { Polish } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
-import { getUserName } from "@/lib/utils";
+import { getUserName, otherParticipant } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-    addDoc,
-    collection,
-    doc,
-    getDoc,
-    onSnapshot,
-    orderBy,
-    query,
-    serverTimestamp,
-    setDoc,
-} from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -37,56 +27,36 @@ type Message = {
 
 export default function ChatScreen() {
   const { id: threadId } = useLocalSearchParams<{ id: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [otherName, setOtherName] = useState("Chat");
-  const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (!user?.uid || !threadId) {
-      if (!authLoading) router.replace("/(tabs)/inbox" as any);
-      return;
-    }
+    if (!user?.uid || !threadId) return;
+    getUserName(otherParticipant(threadId, user.uid), "Chat").then(setOtherName);
 
-    const threadRef = doc(db, "threads", threadId);
-    getDoc(threadRef).then(async (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        const participantIds = (data.participantIds as string[]) || [];
-        const otherId =
-          participantIds[0] === user.uid ? participantIds[1] : participantIds[0];
-        setOtherName(await getUserName(otherId, "Chat"));
-      }
-      setLoading(false);
-    });
-
-    const messagesRef = collection(db, "threads", threadId, "messages");
-    const q = query(messagesRef, orderBy("createdAt", "asc"));
-
-    const unsubscribe = onSnapshot(
+    const q = query(collection(db, "threads", threadId, "messages"), orderBy("createdAt", "asc"));
+    return onSnapshot(
       q,
       (snapshot) => {
-        const list: Message[] = snapshot.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            text: (data.text as string) || "",
-            senderId: (data.senderId as string) || "",
-            createdAt: data.createdAt?.toDate?.() ?? new Date(),
-          };
-        });
-        setMessages(list);
+        setMessages(
+          snapshot.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              text: data.text || "",
+              senderId: data.senderId || "",
+              createdAt: data.createdAt?.toDate?.() ?? new Date(),
+            };
+          })
+        );
       },
-      (err) => {
-        console.error("Chat messages listener:", err);
-      }
+      (err) => console.error("Chat messages listener:", err)
     );
-
-    return () => unsubscribe();
-  }, [user?.uid, threadId, authLoading]);
+  }, [user?.uid, threadId]);
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -94,31 +64,18 @@ export default function ChatScreen() {
 
     setSending(true);
     setInput("");
-
     try {
-      const threadRef = doc(db, "threads", threadId);
-      const threadSnap = await getDoc(threadRef);
-      const participantIds = threadId.split("_");
-
-      if (!threadSnap.exists()) {
-        await setDoc(threadRef, {
-          participantIds,
+      // Creates the thread on the first message, updates its preview after that.
+      await setDoc(
+        doc(db, "threads", threadId),
+        {
+          participantIds: threadId.split("_"),
           lastMessage: text,
           lastMessageAt: serverTimestamp(),
           lastSenderId: user.uid,
-        });
-      } else {
-        await setDoc(
-          threadRef,
-          {
-            lastMessage: text,
-            lastMessageAt: serverTimestamp(),
-            lastSenderId: user.uid,
-          },
-          { merge: true }
-        );
-      }
-
+        },
+        { merge: true }
+      );
       await addDoc(collection(db, "threads", threadId, "messages"), {
         text,
         senderId: user.uid,
@@ -126,13 +83,13 @@ export default function ChatScreen() {
       });
     } catch (err) {
       console.error("Send message error:", err);
-      setInput(text);
+      setInput(text); // put the text back so it isn't lost
     } finally {
       setSending(false);
     }
   };
 
-  if (authLoading || !user) return null;
+  if (!user) return null;
 
   return (
     <KeyboardAvoidingView
@@ -151,12 +108,7 @@ export default function ChatScreen() {
         <Text style={styles.title}>{otherName}</Text>
       </View>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Polish.colors.primary} />
-        </View>
-      ) : (
-        <>
+      <>
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -229,8 +181,7 @@ export default function ChatScreen() {
               )}
             </TouchableOpacity>
           </View>
-        </>
-      )}
+      </>
     </KeyboardAvoidingView>
   );
 }
@@ -258,11 +209,6 @@ const styles = StyleSheet.create({
     ...Polish.typography.subtitle,
     color: Polish.colors.text,
     flex: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   messagesList: {
     padding: Polish.spacing.lg,
