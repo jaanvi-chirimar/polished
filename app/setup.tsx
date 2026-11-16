@@ -18,7 +18,7 @@ import {
   PREFERENCES_HINT,
   PREFERENCES_LABEL,
 } from '@/constants/nailTechOptions';
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { useAuth, UserType } from '@/contexts/AuthContext';
 import { deleteRemovedPhotos } from '@/lib/portfolio';
 import { ErrorKey, formFromProfile, profileFromForm, useProfileForm, validateProfile } from '@/lib/profileForm';
@@ -124,7 +124,7 @@ export default function SetupScreen() {
         <View style={styles.backBtn}>
           {index > 0 && (
             <TouchableOpacity onPress={handleBack} hitSlop={10}>
-              <Ionicons name="chevron-back" size={22} color={Polish.colors.text} />
+              <Ionicons name="chevron-back" size={22} color={Polished.colors.text} />
             </TouchableOpacity>
           )}
         </View>
@@ -237,26 +237,26 @@ export default function SetupScreen() {
   );
 }
 
-const c = Polish.colors;
+const c = Polished.colors;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
-  content: { padding: Polish.spacing.xl, paddingTop: Polish.spacing.lg, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Polish.spacing.xl, paddingTop: 56, paddingBottom: Polish.spacing.lg },
+  content: { padding: Polished.spacing.xl, paddingTop: Polished.spacing.lg, paddingBottom: 40 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Polished.spacing.xl, paddingTop: 56, paddingBottom: Polished.spacing.lg },
   backBtn: { width: 36 },
   progressDots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.borderLight },
   dotDone: { backgroundColor: c.primary, opacity: 0.4 },
   dotActive: { width: 20, backgroundColor: c.primary },
-  title: { ...Polish.typography.title, marginBottom: Polish.spacing.sm, color: c.text },
-  subtitle: { ...Polish.typography.body, color: c.textSecondary, marginBottom: Polish.spacing.xxxl, lineHeight: 22 },
-  section: { marginBottom: Polish.spacing.xl },
-  gap: { height: Polish.spacing.lg },
-  roleButton: { borderWidth: 2, borderColor: c.border, borderRadius: Polish.radius.md, padding: Polish.spacing.xl, marginBottom: Polish.spacing.lg, backgroundColor: c.surface },
+  title: { ...Polished.typography.title, marginBottom: Polished.spacing.sm, color: c.text },
+  subtitle: { ...Polished.typography.body, color: c.textSecondary, marginBottom: Polished.spacing.xxxl, lineHeight: 22 },
+  section: { marginBottom: Polished.spacing.xl },
+  gap: { height: Polished.spacing.lg },
+  roleButton: { borderWidth: 2, borderColor: c.border, borderRadius: Polished.radius.md, padding: Polished.spacing.xl, marginBottom: Polished.spacing.lg, backgroundColor: c.surface },
   roleButtonSelected: { borderColor: c.primary, backgroundColor: c.accent + '30' },
   roleButtonText: { fontSize: 20, fontWeight: '600', marginBottom: 8, color: c.textSecondary },
   roleButtonTextSelected: { color: c.text },
-  roleDescription: { ...Polish.typography.caption, color: c.textSecondary },
-  bottomNav: { paddingHorizontal: Polish.spacing.xl, paddingBottom: 36, paddingTop: Polish.spacing.md, borderTopWidth: 1, borderTopColor: c.borderLight },
+  roleDescription: { ...Polished.typography.caption, color: c.textSecondary },
+  bottomNav: { paddingHorizontal: Polished.spacing.xl, paddingBottom: 36, paddingTop: Polished.spacing.md, borderTopWidth: 1, borderTopColor: c.borderLight },
 });

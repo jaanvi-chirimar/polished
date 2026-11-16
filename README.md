@@ -1,4 +1,4 @@
-# Polish
+# Polished
 
 A nail booking app for Cornell. Customers find nail techs and book appointments. Techs set their hours, prices and policies, then accept requests. Built with React Native (Expo) and Firebase.
 

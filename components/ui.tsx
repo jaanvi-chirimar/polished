@@ -1,48 +1,48 @@
 /** Small building blocks and shared styles used across screens. */
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
-const c = Polish.colors;
-const s = Polish.spacing;
+const c = Polished.colors;
+const s = Polished.spacing;
 type IconName = keyof typeof Ionicons.glyphMap;
 
 export const ui = StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.background },
   card: {
     backgroundColor: c.surface,
-    borderRadius: Polish.radius.lg,
+    borderRadius: Polished.radius.lg,
     padding: s.lg,
     borderWidth: 1,
     borderColor: c.borderLight,
-    ...Polish.shadowSm,
+    ...Polished.shadowSm,
   },
-  title: { ...Polish.typography.title, color: c.text },
-  subtitle: { ...Polish.typography.subtitle, color: c.text },
-  body: { ...Polish.typography.body, color: c.textSecondary },
-  caption: { ...Polish.typography.caption, color: c.textSecondary },
-  muted: { ...Polish.typography.caption, color: c.textMuted },
-  label: { ...Polish.typography.bodyMedium, color: c.text, marginBottom: s.md },
-  hint: { ...Polish.typography.caption, color: c.textMuted, marginBottom: s.md },
+  title: { ...Polished.typography.title, color: c.text },
+  subtitle: { ...Polished.typography.subtitle, color: c.text },
+  body: { ...Polished.typography.body, color: c.textSecondary },
+  caption: { ...Polished.typography.caption, color: c.textSecondary },
+  muted: { ...Polished.typography.caption, color: c.textMuted },
+  label: { ...Polished.typography.bodyMedium, color: c.text, marginBottom: s.md },
+  hint: { ...Polished.typography.caption, color: c.textMuted, marginBottom: s.md },
   spaced: { marginTop: s.xl },
   row: { flexDirection: 'row', alignItems: 'center', gap: s.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: s.sm, marginBottom: s.lg },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: s.md },
   input: {
-    ...Polish.typography.body,
+    ...Polished.typography.body,
     color: c.text,
     borderWidth: 1,
     borderColor: c.border,
-    borderRadius: Polish.radius.md,
+    borderRadius: Polished.radius.md,
     padding: s.lg,
     marginBottom: s.lg,
     backgroundColor: c.surface,
   },
   inputError: { borderColor: c.error },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
-  errorText: { ...Polish.typography.caption, color: c.error, marginTop: -s.md, marginBottom: s.lg },
+  errorText: { ...Polished.typography.caption, color: c.error, marginTop: -s.md, marginBottom: s.lg },
 });
 
 /** A rounded, tappable pill that can be selected. */
@@ -146,14 +146,14 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: s.md,
     paddingVertical: s.sm,
-    borderRadius: Polish.radius.xl,
+    borderRadius: Polished.radius.xl,
     borderWidth: 1,
     borderColor: c.border,
     backgroundColor: c.surface,
   },
   chipSelected: { backgroundColor: c.primary, borderColor: c.primary },
   chipDisabled: { backgroundColor: c.borderLight, borderColor: c.borderLight },
-  chipText: { ...Polish.typography.caption, color: c.textSecondary, fontWeight: '500' },
+  chipText: { ...Polished.typography.caption, color: c.textSecondary, fontWeight: '500' },
   chipTextSelected: { color: '#fff' },
 
   button: {
@@ -163,22 +163,22 @@ const styles = StyleSheet.create({
     gap: s.sm,
     paddingVertical: s.lg,
     paddingHorizontal: s.lg,
-    borderRadius: Polish.radius.lg,
+    borderRadius: Polished.radius.lg,
   },
   buttonSmall: { paddingVertical: s.sm, paddingHorizontal: s.md, gap: 4 },
-  buttonText: Polish.typography.button,
-  buttonTextSmall: { ...Polish.typography.caption, fontWeight: '600' },
-  primary: { backgroundColor: c.primary, ...Polish.shadow },
+  buttonText: Polished.typography.button,
+  buttonTextSmall: { ...Polished.typography.caption, fontWeight: '600' },
+  primary: { backgroundColor: c.primary, ...Polished.shadow },
   danger: { backgroundColor: c.error },
   outline: { borderWidth: 1, borderColor: c.primary },
   dangerOutline: { borderWidth: 1, borderColor: c.error },
   secondary: { borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
 
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: s.xl, gap: s.sm },
-  centerTitle: { ...Polish.typography.subtitle, color: c.textSecondary, textAlign: 'center', marginTop: s.sm },
-  centerSubtitle: { ...Polish.typography.caption, color: c.textMuted, textAlign: 'center' },
+  centerTitle: { ...Polished.typography.subtitle, color: c.textSecondary, textAlign: 'center', marginTop: s.sm },
+  centerSubtitle: { ...Polished.typography.caption, color: c.textMuted, textAlign: 'center' },
 
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: s.lg },
   headerSide: { width: 50 },
-  headerTitle: { ...Polish.typography.subtitle, color: c.text, flex: 1, textAlign: 'center' },
+  headerTitle: { ...Polished.typography.subtitle, color: c.text, flex: 1, textAlign: 'center' },
 });

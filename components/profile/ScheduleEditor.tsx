@@ -1,4 +1,4 @@
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { DAYS_OF_WEEK, Schedule, TimeBlock, dateAtTime, formatTime, fromMinutes, hhmmFromDate, toMinutes } from '@/lib/time';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -94,7 +94,7 @@ export default function ScheduleEditor({
                         }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="close" size={16} color={Polish.colors.textMuted} />
+                        <Ionicons name="close" size={16} color={Polished.colors.textMuted} />
                       </TouchableOpacity>
                     </View>
                     {isEditing && Platform.OS !== 'web' && (
@@ -124,11 +124,11 @@ export default function ScheduleEditor({
                 }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="add" size={20} color={Polish.colors.primary} />
+                <Ionicons name="add" size={20} color={Polished.colors.primary} />
               </TouchableOpacity>
               {hasBlocks && (
                 <TouchableOpacity style={styles.iconButton} onPress={() => copyToAllDays(day)} activeOpacity={0.8}>
-                  <Ionicons name="copy-outline" size={17} color={Polish.colors.textMuted} />
+                  <Ionicons name="copy-outline" size={17} color={Polished.colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -143,36 +143,36 @@ const styles = StyleSheet.create({
   day: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingVertical: Polish.spacing.sm,
+    paddingVertical: Polished.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Polish.colors.borderLight,
-    gap: Polish.spacing.md,
+    borderBottomColor: Polished.colors.borderLight,
+    gap: Polished.spacing.md,
   },
   dayCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: Polish.colors.border,
+    borderColor: Polished.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
-  dayCircleActive: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  dayCircleText: { ...Polish.typography.caption, fontWeight: '700', color: Polish.colors.textMuted },
+  dayCircleActive: { backgroundColor: Polished.colors.primary, borderColor: Polished.colors.primary },
+  dayCircleText: { ...Polished.typography.caption, fontWeight: '700', color: Polished.colors.textMuted },
   dayCircleTextActive: { color: '#fff' },
-  blockRow: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.sm, marginBottom: 4 },
+  blockRow: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.sm, marginBottom: 4 },
   timeButton: {
-    paddingHorizontal: Polish.spacing.md,
+    paddingHorizontal: Polished.spacing.md,
     paddingVertical: 6,
-    borderRadius: Polish.radius.md,
+    borderRadius: Polished.radius.md,
     borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.background,
+    borderColor: Polished.colors.border,
+    backgroundColor: Polished.colors.background,
   },
-  timeText: { ...Polish.typography.caption, color: Polish.colors.text, fontWeight: '500' },
-  dash: { ...Polish.typography.caption, color: Polish.colors.textMuted },
-  unavailable: { ...Polish.typography.caption, color: Polish.colors.textMuted, paddingVertical: 6 },
+  timeText: { ...Polished.typography.caption, color: Polished.colors.text, fontWeight: '500' },
+  dash: { ...Polished.typography.caption, color: Polished.colors.textMuted },
+  unavailable: { ...Polished.typography.caption, color: Polished.colors.textMuted, paddingVertical: 6 },
   dayActions: { alignItems: 'center', gap: 2 },
   iconButton: { padding: 4 },
 });

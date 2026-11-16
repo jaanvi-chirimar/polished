@@ -1,5 +1,5 @@
 import { Button, CenterMessage, Stars, ui } from "@/components/ui";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { Appointment, byDateAsc, byDateDesc, subscribeToAppointments } from "@/lib/appointments";
@@ -164,7 +164,7 @@ export default function BookingsScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }}
+          contentContainerStyle={{ paddingBottom: Polished.spacing.xxxl }}
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => <Text style={[ui.subtitle, styles.sectionTitle]}>{section.title}</Text>}
           renderItem={({ item, section }) => {
@@ -180,7 +180,7 @@ export default function BookingsScreen() {
                   )}
                 </View>
                 <View style={[ui.row, { gap: 4 }]}>
-                  <Ionicons name="calendar-outline" size={14} color={Polish.colors.textMuted} />
+                  <Ionicons name="calendar-outline" size={14} color={Polished.colors.textMuted} />
                   <Text style={ui.body}>{formatDateTime(item.dateTime)}</Text>
                 </View>
                 {item.appointmentType ? <Text style={[ui.caption, { fontWeight: "600" }]}>{item.appointmentType}</Text> : null}
@@ -208,8 +208,8 @@ export default function BookingsScreen() {
 
                 {isRequest && item.altTimeRequest ? (
                   <View style={[ui.row, styles.note]}>
-                    <Ionicons name="time-outline" size={13} color={Polish.colors.primary} />
-                    <Text style={[ui.caption, { color: Polish.colors.primary, flex: 1 }]}>Requested: {item.altTimeRequest}</Text>
+                    <Ionicons name="time-outline" size={13} color={Polished.colors.primary} />
+                    <Text style={[ui.caption, { color: Polished.colors.primary, flex: 1 }]}>Requested: {item.altTimeRequest}</Text>
                   </View>
                 ) : null}
 
@@ -230,13 +230,13 @@ export default function BookingsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={[ui.subtitle, { textAlign: "center" }]}>Rate {reviewModal?.techName}</Text>
-            <View style={{ alignItems: "center", marginVertical: Polish.spacing.xl }}>
+            <View style={{ alignItems: "center", marginVertical: Polished.spacing.xl }}>
               <Stars rating={reviewRating} size={40} onChange={setReviewRating} />
             </View>
             <TextInput
               style={[ui.input, ui.textArea]}
               placeholder="Add a comment (optional)"
-              placeholderTextColor={Polish.colors.textMuted}
+              placeholderTextColor={Polished.colors.textMuted}
               value={reviewComment}
               onChangeText={setReviewComment}
               multiline
@@ -253,25 +253,25 @@ export default function BookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: Polish.spacing.xl, paddingTop: 56 },
-  subtitle: { marginTop: 4, marginBottom: Polish.spacing.lg },
-  sectionTitle: { marginTop: Polish.spacing.lg, marginBottom: Polish.spacing.sm },
-  card: { marginBottom: Polish.spacing.md, gap: 4 },
-  cardPending: { borderColor: Polish.colors.primary + "40", borderWidth: 1.5 },
-  note: { marginTop: Polish.spacing.sm, fontStyle: "italic" },
-  actions: { flexDirection: "row", gap: Polish.spacing.sm, marginTop: Polish.spacing.md },
+  container: { paddingHorizontal: Polished.spacing.xl, paddingTop: 56 },
+  subtitle: { marginTop: 4, marginBottom: Polished.spacing.lg },
+  sectionTitle: { marginTop: Polished.spacing.lg, marginBottom: Polished.spacing.sm },
+  card: { marginBottom: Polished.spacing.md, gap: 4 },
+  cardPending: { borderColor: Polished.colors.primary + "40", borderWidth: 1.5 },
+  note: { marginTop: Polished.spacing.sm, fontStyle: "italic" },
+  actions: { flexDirection: "row", gap: Polished.spacing.sm, marginTop: Polished.spacing.md },
   badge: {
-    ...Polish.typography.caption,
+    ...Polished.typography.caption,
     fontWeight: "600",
     textTransform: "capitalize",
-    color: Polish.colors.textMuted,
-    backgroundColor: Polish.colors.textMuted + "20",
-    paddingHorizontal: Polish.spacing.md,
+    color: Polished.colors.textMuted,
+    backgroundColor: Polished.colors.textMuted + "20",
+    paddingHorizontal: Polished.spacing.md,
     paddingVertical: 3,
-    borderRadius: Polish.radius.xl,
+    borderRadius: Polished.radius.xl,
     overflow: "hidden",
   },
-  badgeConfirmed: { color: Polish.colors.success, backgroundColor: Polish.colors.success + "20" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: Polish.spacing.xl },
-  modalContent: { backgroundColor: Polish.colors.background, borderRadius: Polish.radius.lg, padding: Polish.spacing.xxl, ...Polish.shadow },
+  badgeConfirmed: { color: Polished.colors.success, backgroundColor: Polished.colors.success + "20" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: Polished.spacing.xl },
+  modalContent: { backgroundColor: Polished.colors.background, borderRadius: Polished.radius.lg, padding: Polished.spacing.xxl, ...Polished.shadow },
 });

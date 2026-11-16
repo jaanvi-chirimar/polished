@@ -1,5 +1,5 @@
 import { CenterMessage, ui } from "@/components/ui";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { getUserName, otherParticipant } from "@/lib/utils";
@@ -53,7 +53,7 @@ export default function InboxListScreen() {
         <FlatList
           data={threads}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }}
+          contentContainerStyle={{ paddingBottom: Polished.spacing.xxxl }}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[ui.card, ui.row, styles.card]}
@@ -61,7 +61,7 @@ export default function InboxListScreen() {
               onPress={() => router.push(`/(tabs)/inbox/chat/${item.id}`)}
             >
               <View style={styles.avatar}>
-                <Text style={[ui.subtitle, { color: Polish.colors.primary }]}>{item.otherName.charAt(0).toUpperCase()}</Text>
+                <Text style={[ui.subtitle, { color: Polished.colors.primary }]}>{item.otherName.charAt(0).toUpperCase()}</Text>
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={ui.row}>
@@ -81,8 +81,8 @@ export default function InboxListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: Polish.spacing.xl, paddingTop: 56 },
-  subtitle: { marginTop: 4, marginBottom: Polish.spacing.xxl },
-  card: { marginBottom: Polish.spacing.md, gap: Polish.spacing.md },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Polish.colors.accent + "40", alignItems: "center", justifyContent: "center" },
+  container: { paddingHorizontal: Polished.spacing.xl, paddingTop: 56 },
+  subtitle: { marginTop: 4, marginBottom: Polished.spacing.xxl },
+  card: { marginBottom: Polished.spacing.md, gap: Polished.spacing.md },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Polished.colors.accent + "40", alignItems: "center", justifyContent: "center" },
 });

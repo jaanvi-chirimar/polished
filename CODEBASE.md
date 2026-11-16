@@ -1,8 +1,8 @@
-# Polish: Codebase Guide
+# Polished: Codebase Guide
 
-Polish connects Cornell nail techs with students who want their nails done. Customers browse techs and book 30-minute slots. Techs set their hours and prices, then accept or decline requests. Both sides can chat, and confirmed bookings go on Google Calendar.
+Polished connects Cornell nail techs with students who want their nails done. Customers browse techs and book 30-minute slots. Techs set their hours and prices, then accept or decline requests. Both sides can chat, and confirmed bookings go on Google Calendar.
 
-![How Polish fits together](docs/architecture.svg)
+![How Polished fits together](docs/architecture.svg)
 
 ---
 

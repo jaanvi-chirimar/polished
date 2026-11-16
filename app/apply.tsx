@@ -1,7 +1,7 @@
 import { ChipSelect, LocationPicker } from '@/components/profile/ProfileFields';
 import { BackHeader, Button, CenterMessage, ui } from '@/components/ui';
 import { NAIL_TECH_DESIGNS, NAIL_TECH_TOOLS } from '@/constants/nailTechOptions';
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/firebase/config';
 import { formFromProfile, useProfileForm } from '@/lib/profileForm';
@@ -39,7 +39,7 @@ export default function ApplyScreen() {
       return;
     }
     if (status === 'approved') {
-      Alert.alert('Already approved', 'You are already a nail tech on Polish!');
+      Alert.alert('Already approved', 'You are already a nail tech on Polished!');
       return;
     }
 
@@ -108,7 +108,7 @@ export default function ApplyScreen() {
         <TextInput
           style={[ui.input, ui.textArea]}
           placeholder="e.g. I'm a self-taught nail artist specializing in minimalist gel designs..."
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={form.bio}
           onChangeText={(v) => set('bio', v)}
           multiline
@@ -118,7 +118,7 @@ export default function ApplyScreen() {
         <TextInput
           style={ui.input}
           placeholder="@yourhandle"
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={form.instagramHandle}
           onChangeText={(text) => {
             const handle = text.replace(/^@+/, '');
@@ -138,7 +138,7 @@ export default function ApplyScreen() {
         <TextInput
           style={[ui.input, ui.textArea]}
           placeholder="Anything else you'd like us to know..."
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={whyApply}
           onChangeText={setWhyApply}
           multiline
@@ -151,6 +151,6 @@ export default function ApplyScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { paddingTop: 56, paddingHorizontal: Polish.spacing.xl },
-  intro: { marginBottom: Polish.spacing.xxl, lineHeight: 22 },
+  page: { paddingTop: 56, paddingHorizontal: Polished.spacing.xl },
+  intro: { marginBottom: Polished.spacing.xxl, lineHeight: 22 },
 });

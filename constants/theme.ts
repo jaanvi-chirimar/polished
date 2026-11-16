@@ -5,8 +5,8 @@
 
 import { Platform } from 'react-native';
 
-/** Design tokens for Polish app – warm, salon-style UI */
-export const Polish = {
+/** Design tokens for Polished app – warm, salon-style UI */
+export const Polished = {
   colors: {
     background: '#FAF9F7',
     surface: '#FFFFFF',

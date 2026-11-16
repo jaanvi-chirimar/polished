@@ -1,4 +1,4 @@
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { pickAndUploadPhotos } from '@/lib/portfolio';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -52,9 +52,9 @@ export default function PortfolioEditor({
         ))}
         <TouchableOpacity style={styles.addButton} onPress={addPhotos} disabled={uploading} activeOpacity={0.8}>
           {uploading ? (
-            <ActivityIndicator color={Polish.colors.primary} />
+            <ActivityIndicator color={Polished.colors.primary} />
           ) : (
-            <Ionicons name="add" size={28} color={Polish.colors.primary} />
+            <Ionicons name="add" size={28} color={Polished.colors.primary} />
           )}
         </TouchableOpacity>
       </View>
@@ -65,9 +65,9 @@ export default function PortfolioEditor({
 const THUMB_SIZE = 100;
 
 const styles = StyleSheet.create({
-  hint: { ...Polish.typography.caption, color: Polish.colors.textMuted, marginBottom: Polish.spacing.md },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.sm, marginBottom: Polish.spacing.lg },
-  thumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: Polish.radius.md, backgroundColor: Polish.colors.surface },
+  hint: { ...Polished.typography.caption, color: Polished.colors.textMuted, marginBottom: Polished.spacing.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Polished.spacing.sm, marginBottom: Polished.spacing.lg },
+  thumb: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: Polished.radius.md, backgroundColor: Polished.colors.surface },
   removeIcon: { position: 'absolute', top: 4, right: 4 },
   coverBadge: {
     position: 'absolute',
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: Polish.colors.primary,
-    borderRadius: Polish.radius.sm,
+    backgroundColor: Polished.colors.primary,
+    borderRadius: Polished.radius.sm,
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
@@ -85,12 +85,12 @@ const styles = StyleSheet.create({
   addButton: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: Polish.radius.md,
+    borderRadius: Polished.radius.md,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: Polish.colors.primary,
+    borderColor: Polished.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Polish.colors.surface,
+    backgroundColor: Polished.colors.surface,
   },
 });

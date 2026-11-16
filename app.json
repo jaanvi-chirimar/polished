@@ -1,13 +1,12 @@
 {
   "expo": {
-    "name": "polish",
-    "slug": "polish",
+    "name": "Polished",
+    "slug": "polished",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "polish",
+    "scheme": "polished",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "infoPlist": {
         "CFBundleURLTypes": [
@@ -30,7 +29,6 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {

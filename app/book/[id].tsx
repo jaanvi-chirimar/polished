@@ -1,6 +1,6 @@
 import { BackHeader, Button, Chip, ui } from "@/components/ui";
 import { APPOINTMENT_TYPES } from "@/constants/nailTechOptions";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { PricingTierKey, useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { enabledTiers, fetchTech, Tech, usesPricingTiers } from "@/lib/techs";
@@ -144,13 +144,13 @@ export default function BookScreen() {
   const hasSchedule = Object.keys(techSchedule).length > 0;
 
   return (
-    <View style={[ui.screen, { paddingTop: insets.top + 24, paddingHorizontal: Polish.spacing.xl }]}>
+    <View style={[ui.screen, { paddingTop: insets.top + 24, paddingHorizontal: Polished.spacing.xl }]}>
       <BackHeader title={`Book with ${tech?.name ?? name ?? "Nail Tech"}`} />
-      <ScrollView contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingBottom: Polished.spacing.xxxl }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {(techTools.length > 0 || techDesigns.length > 0) && (
           <Section label="Services">
             {techTools.length > 0 && <Text style={ui.body}>{techTools.join(" · ")}</Text>}
-            {techDesigns.length > 0 && <Text style={[ui.body, { marginTop: Polish.spacing.sm }]}>{techDesigns.join(" · ")}</Text>}
+            {techDesigns.length > 0 && <Text style={[ui.body, { marginTop: Polished.spacing.sm }]}>{techDesigns.join(" · ")}</Text>}
           </Section>
         )}
 
@@ -192,8 +192,8 @@ export default function BookScreen() {
         {techRemovalAddOn && (
           <Section>
             <TouchableOpacity style={ui.row} onPress={() => setAddRemoval(!addRemoval)} activeOpacity={0.8}>
-              <Ionicons name={addRemoval ? "checkbox" : "square-outline"} size={22} color={Polish.colors.primary} />
-              <Text style={[ui.body, { flex: 1, color: Polish.colors.text }]}>Add gel removal</Text>
+              <Ionicons name={addRemoval ? "checkbox" : "square-outline"} size={22} color={Polished.colors.primary} />
+              <Text style={[ui.body, { flex: 1, color: Polished.colors.text }]}>Add gel removal</Text>
               <Text style={styles.price}>+${techRemovalAddOn.price}</Text>
             </TouchableOpacity>
           </Section>
@@ -239,7 +239,7 @@ export default function BookScreen() {
             value={note}
             onChangeText={setNote}
             placeholder="Design, color, inspo, etc."
-            placeholderTextColor={Polish.colors.textMuted}
+            placeholderTextColor={Polished.colors.textMuted}
             onSubmitEditing={() => Keyboard.dismiss()}
             submitBehavior="blurAndSubmit"
             style={[ui.input, ui.textArea]}
@@ -252,14 +252,14 @@ export default function BookScreen() {
             value={altTimeRequest}
             onChangeText={setAltTimeRequest}
             placeholder="Describe when you're free (e.g. 'weekday evenings after 6pm')"
-            placeholderTextColor={Polish.colors.textMuted}
+            placeholderTextColor={Polished.colors.textMuted}
             style={[ui.input, ui.textArea]}
             multiline
           />
         </Section>
 
         {techReschedulePolicy || techLatePolicy ? (
-          <View style={[ui.card, { marginBottom: Polish.spacing.xxl }]}>
+          <View style={[ui.card, { marginBottom: Polished.spacing.xxl }]}>
             <Text style={ui.label}>Policies</Text>
             {techReschedulePolicy ? <Text style={ui.caption}>Reschedule: {techReschedulePolicy}</Text> : null}
             {techLatePolicy ? <Text style={ui.caption}>Late: {techLatePolicy}</Text> : null}
@@ -270,8 +270,8 @@ export default function BookScreen() {
 
         {confirmed && (
           <View style={[ui.row, styles.confirmed]}>
-            <Ionicons name="checkmark-circle" size={24} color={Polish.colors.success} />
-            <Text style={[ui.label, { marginBottom: 0, color: Polish.colors.success }]}>Booking requested!</Text>
+            <Ionicons name="checkmark-circle" size={24} color={Polished.colors.success} />
+            <Text style={[ui.label, { marginBottom: 0, color: Polished.colors.success }]}>Booking requested!</Text>
           </View>
         )}
       </ScrollView>
@@ -281,7 +281,7 @@ export default function BookScreen() {
 
 function Section({ label, children }: { label?: string; children: React.ReactNode }) {
   return (
-    <View style={{ marginBottom: Polish.spacing.xxl }}>
+    <View style={{ marginBottom: Polished.spacing.xxl }}>
       {label ? <Text style={ui.label}>{label}</Text> : null}
       {children}
     </View>
@@ -289,15 +289,15 @@ function Section({ label, children }: { label?: string; children: React.ReactNod
 }
 
 const styles = StyleSheet.create({
-  option: { marginBottom: Polish.spacing.sm },
-  optionSelected: { borderColor: Polish.colors.primary, borderWidth: 2 },
-  selectedText: { color: Polish.colors.primary },
-  price: { ...Polish.typography.bodyMedium, color: Polish.colors.primary, fontWeight: "700" },
+  option: { marginBottom: Polished.spacing.sm },
+  optionSelected: { borderColor: Polished.colors.primary, borderWidth: 2 },
+  selectedText: { color: Polished.colors.primary },
+  price: { ...Polished.typography.bodyMedium, color: Polished.colors.primary, fontWeight: "700" },
   confirmed: {
     justifyContent: "center",
-    marginTop: Polish.spacing.xl,
-    padding: Polish.spacing.lg,
-    borderRadius: Polish.radius.md,
-    backgroundColor: Polish.colors.success + "18",
+    marginTop: Polished.spacing.xl,
+    padding: Polished.spacing.lg,
+    borderRadius: Polished.radius.md,
+    backgroundColor: Polished.colors.success + "18",
   },
 });

@@ -1,5 +1,5 @@
 import { BackHeader, Button, CenterMessage, Chip, Stars, ui } from "@/components/ui";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { enabledTiers, fetchTech, Tech } from "@/lib/techs";
@@ -97,7 +97,7 @@ export default function TechProfile() {
   const policies = profile?.policies;
 
   return (
-    <View style={[ui.screen, { paddingTop: insets.top + 24, paddingHorizontal: Polish.spacing.xl }]}>
+    <View style={[ui.screen, { paddingTop: insets.top + 24, paddingHorizontal: Polished.spacing.xl }]}>
       <BackHeader
         title="Profile"
         right={isOwnProfile ? <Button small variant="outline" title="Edit" onPress={() => router.push("/(tabs)/profile")} /> : null}
@@ -107,7 +107,7 @@ export default function TechProfile() {
       ) : error ? (
         <CenterMessage icon="alert-circle-outline" title={error} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: Polish.spacing.xxxl }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: Polished.spacing.xxxl }} showsVerticalScrollIndicator={false}>
           <Text style={[ui.title, styles.center]}>{techName}</Text>
           {avgRating !== null && (
             <View style={[ui.row, styles.ratingRow]}>
@@ -129,7 +129,7 @@ export default function TechProfile() {
           <View style={[ui.card, styles.section]}>
             {tech?.location ? (
               <View style={ui.row}>
-                <Ionicons name="location-outline" size={20} color={Polish.colors.textSecondary} />
+                <Ionicons name="location-outline" size={20} color={Polished.colors.textSecondary} />
                 <Text style={ui.body}>{tech.location}</Text>
               </View>
             ) : null}
@@ -145,7 +145,7 @@ export default function TechProfile() {
               {tiers.map(({ key, label, tier }) => (
                 <View key={key} style={[ui.row, styles.tierRow]}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[ui.body, { color: Polish.colors.text }]}>{label}</Text>
+                    <Text style={[ui.body, { color: Polished.colors.text }]}>{label}</Text>
                     {tier.description ? <Text style={ui.muted}>{tier.description}</Text> : null}
                   </View>
                   {tier.price > 0 ? <Text style={styles.price}>${tier.price}</Text> : null}
@@ -199,7 +199,7 @@ export default function TechProfile() {
 function Info({ label, text }: { label: string; text?: string }) {
   if (!text) return null;
   return (
-    <View style={{ marginTop: Polish.spacing.md }}>
+    <View style={{ marginTop: Polished.spacing.md }}>
       <Text style={[ui.muted, { fontWeight: "600" }]}>{label}</Text>
       <Text style={ui.body}>{text}</Text>
     </View>
@@ -208,11 +208,11 @@ function Info({ label, text }: { label: string; text?: string }) {
 
 const styles = StyleSheet.create({
   center: { textAlign: "center" },
-  ratingRow: { justifyContent: "center", marginTop: Polish.spacing.sm },
-  section: { marginTop: Polish.spacing.lg },
-  photo: { width: SCREEN_WIDTH * 0.55, height: 220, borderRadius: Polish.radius.lg, marginRight: Polish.spacing.md },
-  tierRow: { paddingVertical: Polish.spacing.sm },
-  price: { ...Polish.typography.bodyMedium, color: Polish.colors.primary, fontWeight: "700" },
-  review: { paddingVertical: Polish.spacing.sm, borderTopWidth: 1, borderTopColor: Polish.colors.borderLight, gap: 4 },
-  buttons: { flexDirection: "row", gap: Polish.spacing.md, marginTop: Polish.spacing.xl },
+  ratingRow: { justifyContent: "center", marginTop: Polished.spacing.sm },
+  section: { marginTop: Polished.spacing.lg },
+  photo: { width: SCREEN_WIDTH * 0.55, height: 220, borderRadius: Polished.radius.lg, marginRight: Polished.spacing.md },
+  tierRow: { paddingVertical: Polished.spacing.sm },
+  price: { ...Polished.typography.bodyMedium, color: Polished.colors.primary, fontWeight: "700" },
+  review: { paddingVertical: Polished.spacing.sm, borderTopWidth: 1, borderTopColor: Polished.colors.borderLight, gap: 4 },
+  buttons: { flexDirection: "row", gap: Polished.spacing.md, marginTop: Polished.spacing.xl },
 });

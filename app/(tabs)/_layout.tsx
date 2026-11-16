@@ -1,5 +1,5 @@
 // app/(tabs)/_layout.tsx
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
@@ -8,11 +8,11 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Polish.colors.tabIconSelected,
-        tabBarInactiveTintColor: Polish.colors.tabIconDefault,
+        tabBarActiveTintColor: Polished.colors.tabIconSelected,
+        tabBarInactiveTintColor: Polished.colors.tabIconDefault,
         tabBarStyle: {
-          backgroundColor: Polish.colors.surface,
-          borderTopColor: Polish.colors.borderLight,
+          backgroundColor: Polished.colors.surface,
+          borderTopColor: Polished.colors.borderLight,
           borderTopWidth: 1,
           paddingTop: 8,
         },
@@ -27,7 +27,7 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={size} color={color as string} />
           ),
         }}
       />
@@ -36,7 +36,7 @@ export default function TabsLayout() {
         options={{
           title: "Bookings",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={size} color={color as string} />
           ),
         }}
       />
@@ -45,7 +45,7 @@ export default function TabsLayout() {
         options={{
           title: "Inbox",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mail-outline" size={size} color={color} />
+            <Ionicons name="mail-outline" size={size} color={color as string} />
           ),
         }}
         listeners={({ navigation }) => ({
@@ -60,7 +60,7 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color as string} />
           ),
         }}
       />

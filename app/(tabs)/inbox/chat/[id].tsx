@@ -1,5 +1,5 @@
 import { BackHeader, ui } from "@/components/ui";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { getUserName, otherParticipant } from "@/lib/utils";
@@ -68,22 +68,22 @@ export default function ChatScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      <View style={{ paddingHorizontal: Polish.spacing.lg }}>
+      <View style={{ paddingHorizontal: Polished.spacing.lg }}>
         <BackHeader title={otherName} />
       </View>
       <FlatList
         ref={listRef}
         data={messages}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: Polish.spacing.lg }}
+        contentContainerStyle={{ padding: Polished.spacing.lg }}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={<Text style={[ui.body, styles.empty]}>No messages yet. Say hi!</Text>}
         renderItem={({ item }) => {
           const isMe = item.senderId === user.uid;
           return (
             <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
-              <Text style={[Polish.typography.body, { color: isMe ? "#fff" : Polish.colors.text }]}>{item.text}</Text>
-              <Text style={[styles.time, { color: isMe ? "rgba(255,255,255,0.8)" : Polish.colors.textMuted }]}>
+              <Text style={[Polished.typography.body, { color: isMe ? "#fff" : Polished.colors.text }]}>{item.text}</Text>
+              <Text style={[styles.time, { color: isMe ? "rgba(255,255,255,0.8)" : Polished.colors.textMuted }]}>
                 {item.createdAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
               </Text>
             </View>
@@ -94,7 +94,7 @@ export default function ChatScreen() {
         <TextInput
           style={styles.input}
           placeholder="Message..."
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={input}
           onChangeText={setInput}
           multiline
@@ -110,45 +110,45 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  empty: { textAlign: "center", paddingVertical: Polish.spacing.xxl },
+  empty: { textAlign: "center", paddingVertical: Polished.spacing.xxl },
   bubble: {
     maxWidth: "80%",
-    paddingVertical: Polish.spacing.sm,
-    paddingHorizontal: Polish.spacing.lg,
-    borderRadius: Polish.radius.xl,
-    marginBottom: Polish.spacing.sm,
+    paddingVertical: Polished.spacing.sm,
+    paddingHorizontal: Polished.spacing.lg,
+    borderRadius: Polished.radius.xl,
+    marginBottom: Polished.spacing.sm,
   },
-  bubbleMe: { alignSelf: "flex-end", backgroundColor: Polish.colors.primary },
-  bubbleThem: { alignSelf: "flex-start", backgroundColor: Polish.colors.surface, borderWidth: 1, borderColor: Polish.colors.borderLight },
-  time: { ...Polish.typography.caption, fontSize: 10, marginTop: 2 },
+  bubbleMe: { alignSelf: "flex-end", backgroundColor: Polished.colors.primary },
+  bubbleThem: { alignSelf: "flex-start", backgroundColor: Polished.colors.surface, borderWidth: 1, borderColor: Polished.colors.borderLight },
+  time: { ...Polished.typography.caption, fontSize: 10, marginTop: 2 },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: Polish.spacing.sm,
-    padding: Polish.spacing.md,
-    paddingBottom: Polish.spacing.lg,
-    backgroundColor: Polish.colors.surface,
+    gap: Polished.spacing.sm,
+    padding: Polished.spacing.md,
+    paddingBottom: Polished.spacing.lg,
+    backgroundColor: Polished.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Polish.colors.borderLight,
+    borderTopColor: Polished.colors.borderLight,
   },
   input: {
-    ...Polish.typography.body,
+    ...Polished.typography.body,
     flex: 1,
     minHeight: 40,
     maxHeight: 100,
-    color: Polish.colors.text,
+    color: Polished.colors.text,
     borderWidth: 1,
-    borderColor: Polish.colors.border,
-    borderRadius: Polish.radius.xl,
-    paddingHorizontal: Polish.spacing.lg,
-    paddingVertical: Polish.spacing.sm,
-    backgroundColor: Polish.colors.background,
+    borderColor: Polished.colors.border,
+    borderRadius: Polished.radius.xl,
+    paddingHorizontal: Polished.spacing.lg,
+    paddingVertical: Polished.spacing.sm,
+    backgroundColor: Polished.colors.background,
   },
   send: {
     width: 44,
     height: 40,
-    borderRadius: Polish.radius.lg,
-    backgroundColor: Polish.colors.primary,
+    borderRadius: Polished.radius.lg,
+    backgroundColor: Polished.colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },

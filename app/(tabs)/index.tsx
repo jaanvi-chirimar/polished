@@ -4,7 +4,7 @@
  */
 import { CenterMessage, Chip, ui } from "@/components/ui";
 import { LOCATION_OPTIONS, NAIL_TECH_DESIGNS, NAIL_TECH_TOOLS } from "@/constants/nailTechOptions";
-import { Polish } from "@/constants/theme";
+import { Polished } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase/config";
 import { byDateAsc, subscribeToAppointments } from "@/lib/appointments";
@@ -101,15 +101,15 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <StatCard value={status.pendingCount} label={"Pending\nRequests"} icon="time-outline" color={Polish.colors.primary} />
-          <StatCard value={status.confirmedCount} label={"Upcoming\nConfirmed"} icon="checkmark-circle-outline" color={Polish.colors.success} />
+          <StatCard value={status.pendingCount} label={"Pending\nRequests"} icon="time-outline" color={Polished.colors.primary} />
+          <StatCard value={status.confirmedCount} label={"Upcoming\nConfirmed"} icon="checkmark-circle-outline" color={Polished.colors.success} />
         </View>
 
         {status.next ? (
           <StatusCard status={status} />
         ) : (
           <View style={[ui.card, ui.row, styles.gapBelow]}>
-            <Ionicons name="checkmark-circle-outline" size={24} color={Polish.colors.success} />
+            <Ionicons name="checkmark-circle-outline" size={24} color={Polished.colors.success} />
             <Text style={[ui.body, { flex: 1 }]}>No upcoming appointments. You’re all clear!</Text>
           </View>
         )}
@@ -137,18 +137,18 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={20} color={Polish.colors.textMuted} />
+        <Ionicons name="search-outline" size={20} color={Polished.colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name or location..."
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
         />
         {search ? (
           <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
-            <Ionicons name="close-circle" size={20} color={Polish.colors.textMuted} />
+            <Ionicons name="close-circle" size={20} color={Polished.colors.textMuted} />
           </TouchableOpacity>
         ) : null}
         <Chip label="Filters" selected={hasFilters || filtersOpen} onPress={() => setFiltersOpen(!filtersOpen)} />
@@ -221,7 +221,7 @@ export default function HomeScreen() {
 function ProfileButton() {
   return (
     <TouchableOpacity onPress={goToProfile} hitSlop={8}>
-      <Ionicons name="person-circle-outline" size={32} color={Polish.colors.text} />
+      <Ionicons name="person-circle-outline" size={32} color={Polished.colors.text} />
     </TouchableOpacity>
   );
 }
@@ -229,7 +229,7 @@ function ProfileButton() {
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.gapBelow}>
-      <Text style={[ui.muted, { marginBottom: Polish.spacing.sm }]}>{label}</Text>
+      <Text style={[ui.muted, { marginBottom: Polished.spacing.sm }]}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ui.row}>
         {children}
       </ScrollView>
@@ -250,8 +250,8 @@ function StatCard({ value, label, icon, color }: { value: number; label: string;
 function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={[ui.card, styles.quickAction]} onPress={onPress} activeOpacity={0.85}>
-      <Ionicons name={icon} size={22} color={Polish.colors.primary} />
-      <Text style={[ui.caption, { color: Polish.colors.text, fontWeight: "600" }]}>{label}</Text>
+      <Ionicons name={icon} size={22} color={Polished.colors.primary} />
+      <Text style={[ui.caption, { color: Polished.colors.text, fontWeight: "600" }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -260,16 +260,16 @@ function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.gly
 function StatusCard({ status }: { status: TechStatus }) {
   return (
     <TouchableOpacity style={[ui.card, ui.row, styles.gapBelow]} onPress={goToBookings} activeOpacity={0.85}>
-      <Ionicons name="calendar-outline" size={22} color={Polish.colors.primary} />
+      <Ionicons name="calendar-outline" size={22} color={Polished.colors.primary} />
       <View style={{ flex: 1 }}>
         <Text style={ui.muted}>{status.next ? "Next appointment" : "Pending requests"}</Text>
-        <Text style={[ui.body, { color: Polish.colors.text }]} numberOfLines={1}>
+        <Text style={[ui.body, { color: Polished.colors.text }]} numberOfLines={1}>
           {status.next
             ? `${status.next.clientName} · ${formatDateTime(status.next.dateTime)}`
             : `${status.pendingCount} booking${status.pendingCount !== 1 ? "s" : ""} awaiting your response`}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Polish.colors.textMuted} />
+      <Ionicons name="chevron-forward" size={20} color={Polished.colors.textMuted} />
     </TouchableOpacity>
   );
 }
@@ -286,14 +286,14 @@ function TechCard({ tech, availableToday }: { tech: Tech; availableToday: boolea
         <Image source={{ uri: cover }} style={styles.techImage} contentFit="cover" />
       ) : (
         <View style={[styles.techImage, styles.techImagePlaceholder]}>
-          <Ionicons name="person" size={28} color={Polish.colors.primary} />
+          <Ionicons name="person" size={28} color={Polished.colors.primary} />
         </View>
       )}
-      <View style={{ padding: Polish.spacing.md, gap: Polish.spacing.xs }}>
+      <View style={{ padding: Polished.spacing.md, gap: Polished.spacing.xs }}>
         <Text style={[ui.label, { marginBottom: 0 }]} numberOfLines={1}>{tech.name}</Text>
         {tech.location ? (
           <View style={[ui.row, { gap: 4 }]}>
-            <Ionicons name="location-outline" size={12} color={Polish.colors.textMuted} />
+            <Ionicons name="location-outline" size={12} color={Polished.colors.textMuted} />
             <Text style={[ui.muted, { fontSize: 11 }]} numberOfLines={1}>{tech.location}</Text>
           </View>
         ) : null}
@@ -304,31 +304,31 @@ function TechCard({ tech, availableToday }: { tech: Tech; availableToday: boolea
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Polish.spacing.xl, paddingTop: 56, paddingBottom: Polish.spacing.xxxl },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: Polish.spacing.xxl },
-  gapBelow: { marginBottom: Polish.spacing.lg },
-  gapAbove: { marginTop: Polish.spacing.sm, marginBottom: Polish.spacing.sm },
-  empty: { textAlign: "center", paddingVertical: Polish.spacing.xxl },
-  searchRow: { ...StyleSheet.flatten(ui.card), ...StyleSheet.flatten(ui.row), paddingVertical: Polish.spacing.xs, marginBottom: Polish.spacing.lg },
-  searchInput: { ...Polish.typography.body, color: Polish.colors.text, flex: 1, minWidth: 0, paddingVertical: Polish.spacing.sm },
-  statsRow: { flexDirection: "row", gap: Polish.spacing.md, marginBottom: Polish.spacing.lg },
-  statNumber: { ...Polish.typography.title, fontSize: 32, lineHeight: 36, color: Polish.colors.text },
-  statIcon: { position: "absolute", top: Polish.spacing.md, right: Polish.spacing.md },
-  quickAction: { flex: 1, alignItems: "center", gap: Polish.spacing.sm },
-  gridRow: { gap: Polish.spacing.md, marginBottom: Polish.spacing.md },
+  content: { paddingHorizontal: Polished.spacing.xl, paddingTop: 56, paddingBottom: Polished.spacing.xxxl },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: Polished.spacing.xxl },
+  gapBelow: { marginBottom: Polished.spacing.lg },
+  gapAbove: { marginTop: Polished.spacing.sm, marginBottom: Polished.spacing.sm },
+  empty: { textAlign: "center", paddingVertical: Polished.spacing.xxl },
+  searchRow: { ...StyleSheet.flatten(ui.card), ...StyleSheet.flatten(ui.row), paddingVertical: Polished.spacing.xs, marginBottom: Polished.spacing.lg },
+  searchInput: { ...Polished.typography.body, color: Polished.colors.text, flex: 1, minWidth: 0, paddingVertical: Polished.spacing.sm },
+  statsRow: { flexDirection: "row", gap: Polished.spacing.md, marginBottom: Polished.spacing.lg },
+  statNumber: { ...Polished.typography.title, fontSize: 32, lineHeight: 36, color: Polished.colors.text },
+  statIcon: { position: "absolute", top: Polished.spacing.md, right: Polished.spacing.md },
+  quickAction: { flex: 1, alignItems: "center", gap: Polished.spacing.sm },
+  gridRow: { gap: Polished.spacing.md, marginBottom: Polished.spacing.md },
   techCard: { flex: 1, padding: 0, overflow: "hidden" },
   techImage: { width: "100%", height: 140 },
-  techImagePlaceholder: { backgroundColor: Polish.colors.accent + "40", alignItems: "center", justifyContent: "center" },
+  techImagePlaceholder: { backgroundColor: Polished.colors.accent + "40", alignItems: "center", justifyContent: "center" },
   badge: {
-    ...Polish.typography.caption,
+    ...Polished.typography.caption,
     fontSize: 10,
     fontWeight: "600",
-    color: Polish.colors.success,
-    backgroundColor: Polish.colors.success + "25",
+    color: Polished.colors.success,
+    backgroundColor: Polished.colors.success + "25",
     alignSelf: "flex-start",
-    paddingHorizontal: Polish.spacing.sm,
+    paddingHorizontal: Polished.spacing.sm,
     paddingVertical: 4,
-    borderRadius: Polish.radius.sm,
+    borderRadius: Polished.radius.sm,
     overflow: "hidden",
   },
 });

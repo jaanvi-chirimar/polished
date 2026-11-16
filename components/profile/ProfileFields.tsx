@@ -9,7 +9,7 @@ import {
   TOOLS_HINT,
   TOOLS_LABEL,
 } from '@/constants/nailTechOptions';
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { PRICING_TIER_KEYS } from '@/contexts/AuthContext';
 import type { FormErrors, ProfileForm, SetField } from '@/lib/profileForm';
 import { toggleInList } from '@/lib/utils';
@@ -147,8 +147,8 @@ export function PricingEditor({ form, set, errors = {} }: FormProps) {
         <Switch
           value={form.usePricingTiers}
           onValueChange={(v) => set('usePricingTiers', v)}
-          trackColor={{ false: Polish.colors.border, true: Polish.colors.primary + '80' }}
-          thumbColor={form.usePricingTiers ? Polish.colors.primary : Polish.colors.textMuted}
+          trackColor={{ false: Polished.colors.border, true: Polished.colors.primary + '80' }}
+          thumbColor={form.usePricingTiers ? Polished.colors.primary : Polished.colors.textMuted}
         />
       </View>
       {form.usePricingTiers ? (
@@ -177,7 +177,7 @@ export function PricingEditor({ form, set, errors = {} }: FormProps) {
                       value={tier.price > 0 ? String(tier.price) : ''}
                       onChangeText={(v) => updateTier(key, { price: parseFloat(v) || 0 })}
                       placeholder="Price ($)"
-                      placeholderTextColor={Polish.colors.textMuted}
+                      placeholderTextColor={Polished.colors.textMuted}
                       keyboardType="decimal-pad"
                     />
                     <TextInput
@@ -185,7 +185,7 @@ export function PricingEditor({ form, set, errors = {} }: FormProps) {
                       value={tier.description ?? ''}
                       onChangeText={(v) => updateTier(key, { description: v })}
                       placeholder="Description (optional, e.g. Gel polish included)"
-                      placeholderTextColor={Polish.colors.textMuted}
+                      placeholderTextColor={Polished.colors.textMuted}
                       multiline
                       numberOfLines={2}
                     />
@@ -199,7 +199,7 @@ export function PricingEditor({ form, set, errors = {} }: FormProps) {
         <TextInput
           style={[fs.input, fs.textArea, errors.pricing && fs.inputError]}
           placeholder="e.g. Starting at $45 for basic gel, $65 for full set"
-          placeholderTextColor={Polish.colors.textMuted}
+          placeholderTextColor={Polished.colors.textMuted}
           value={form.pricingDescription}
           onChangeText={(v) => set('pricingDescription', v)}
           multiline
@@ -222,7 +222,7 @@ export function RemovalAddOnEditor({ form, set }: FormProps) {
         <Switch
           value={form.removalAddOnEnabled}
           onValueChange={(v) => set('removalAddOnEnabled', v)}
-          trackColor={{ false: Polish.colors.border, true: Polish.colors.primary }}
+          trackColor={{ false: Polished.colors.border, true: Polished.colors.primary }}
           thumbColor="#fff"
         />
       </View>
@@ -237,7 +237,7 @@ export function RemovalAddOnEditor({ form, set }: FormProps) {
               onChangeText={(v) => set('removalAddOnPrice', v)}
               keyboardType="decimal-pad"
               placeholder="15"
-              placeholderTextColor={Polish.colors.textMuted}
+              placeholderTextColor={Polished.colors.textMuted}
             />
           </View>
         </View>
@@ -280,7 +280,7 @@ export function PoliciesEditor({ form, set }: FormProps) {
       <TextInput
         style={[fs.input, fs.textArea]}
         placeholder="e.g. Reschedule at least 24 hours in advance"
-        placeholderTextColor={Polish.colors.textMuted}
+        placeholderTextColor={Polished.colors.textMuted}
         value={form.reschedulePolicy}
         onChangeText={(v) => set('reschedulePolicy', v)}
         multiline
@@ -290,7 +290,7 @@ export function PoliciesEditor({ form, set }: FormProps) {
       <TextInput
         style={[fs.input, fs.textArea]}
         placeholder="e.g. 10+ min late may require rescheduling"
-        placeholderTextColor={Polish.colors.textMuted}
+        placeholderTextColor={Polished.colors.textMuted}
         value={form.latePolicy}
         onChangeText={(v) => set('latePolicy', v)}
         multiline
@@ -302,50 +302,50 @@ export function PoliciesEditor({ form, set }: FormProps) {
 
 const styles = StyleSheet.create({
   tierCard: {
-    backgroundColor: Polish.colors.background,
-    borderRadius: Polish.radius.md,
+    backgroundColor: Polished.colors.background,
+    borderRadius: Polished.radius.md,
     borderWidth: 1,
-    borderColor: Polish.colors.borderLight,
-    padding: Polish.spacing.md,
-    marginBottom: Polish.spacing.md,
+    borderColor: Polished.colors.borderLight,
+    padding: Polished.spacing.md,
+    marginBottom: Polished.spacing.md,
   },
-  tierHeader: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.md },
+  tierHeader: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.md },
   tierToggle: {
-    paddingHorizontal: Polish.spacing.md,
+    paddingHorizontal: Polished.spacing.md,
     paddingVertical: 4,
-    borderRadius: Polish.radius.xl,
+    borderRadius: Polished.radius.xl,
     borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
+    borderColor: Polished.colors.border,
+    backgroundColor: Polished.colors.surface,
   },
-  tierToggleOn: { backgroundColor: Polish.colors.primary, borderColor: Polish.colors.primary },
-  tierToggleText: { ...Polish.typography.caption, color: Polish.colors.textMuted, fontWeight: '600' },
+  tierToggleOn: { backgroundColor: Polished.colors.primary, borderColor: Polished.colors.primary },
+  tierToggleText: { ...Polished.typography.caption, color: Polished.colors.textMuted, fontWeight: '600' },
   tierToggleTextOn: { color: '#fff' },
-  tierName: { ...Polish.typography.bodyMedium, color: Polish.colors.text, flex: 1 },
-  tierFields: { marginTop: Polish.spacing.md },
-  rowTitle: { ...Polish.typography.bodyMedium, color: Polish.colors.text, marginBottom: 2 },
+  tierName: { ...Polished.typography.bodyMedium, color: Polished.colors.text, flex: 1 },
+  tierFields: { marginTop: Polished.spacing.md },
+  rowTitle: { ...Polished.typography.bodyMedium, color: Polished.colors.text, marginBottom: 2 },
   priceInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Polish.colors.border,
-    borderRadius: Polish.radius.md,
-    paddingHorizontal: Polish.spacing.md,
-    backgroundColor: Polish.colors.surface,
+    borderColor: Polished.colors.border,
+    borderRadius: Polished.radius.md,
+    paddingHorizontal: Polished.spacing.md,
+    backgroundColor: Polished.colors.surface,
   },
-  dollarSign: { ...Polish.typography.body, color: Polish.colors.textSecondary, marginRight: 2 },
-  priceInput: { ...Polish.typography.body, color: Polish.colors.text, paddingVertical: Polish.spacing.sm, minWidth: 60 },
-  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.xl, marginBottom: Polish.spacing.lg },
+  dollarSign: { ...Polished.typography.body, color: Polished.colors.textSecondary, marginRight: 2 },
+  priceInput: { ...Polished.typography.body, color: Polished.colors.text, paddingVertical: Polished.spacing.sm, minWidth: 60 },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.xl, marginBottom: Polished.spacing.lg },
   stepperButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Polish.colors.border,
-    backgroundColor: Polish.colors.surface,
+    borderColor: Polished.colors.border,
+    backgroundColor: Polished.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperButtonText: { ...Polish.typography.title, color: Polish.colors.text, lineHeight: 28 },
-  stepperValue: { ...Polish.typography.subtitle, color: Polish.colors.text, minWidth: 80, textAlign: 'center' },
+  stepperButtonText: { ...Polished.typography.title, color: Polished.colors.text, lineHeight: 28 },
+  stepperValue: { ...Polished.typography.subtitle, color: Polished.colors.text, minWidth: 80, textAlign: 'center' },
 });

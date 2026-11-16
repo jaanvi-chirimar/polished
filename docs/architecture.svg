@@ -20,7 +20,7 @@
 
   <rect width="900" height="850" fill="#FAF7F5"/>
 
-  <text x="16" y="40" class="title">Polish: how it fits together</text>
+  <text x="16" y="40" class="title">Polished: how it fits together</text>
   <text x="16" y="62" class="subtitle">Expo Router app · Firebase backend · Cornell students only</text>
 
   <!-- 1. Getting in -->

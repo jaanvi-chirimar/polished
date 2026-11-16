@@ -19,7 +19,7 @@ import {
   PREFERENCES_HINT,
   TOOLS_LABEL,
 } from '@/constants/nailTechOptions';
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { PRICING_TIER_KEYS, useAuth, UserType } from '@/contexts/AuthContext';
 import { auth } from '@/firebase/config';
 import { disconnectGoogleCalendar } from '@/lib/googleCalendar';
@@ -169,7 +169,7 @@ export default function ProfileEditor() {
               <Text style={styles.sectionLabel}>{title}</Text>
               {!open && <Text style={styles.sectionPreview} numberOfLines={1}>{preview}</Text>}
             </View>
-            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={Polish.colors.textMuted} />
+            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={Polished.colors.textMuted} />
           </TouchableOpacity>
         ) : (
           <Text style={styles.sectionLabel}>{title}</Text>
@@ -187,7 +187,7 @@ export default function ProfileEditor() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + Polish.spacing.lg }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + Polished.spacing.lg }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
@@ -207,9 +207,9 @@ export default function ProfileEditor() {
           <Ionicons
             name={notice.type === 'success' ? 'checkmark-circle' : 'alert-circle'}
             size={16}
-            color={notice.type === 'success' ? Polish.colors.success : Polish.colors.error}
+            color={notice.type === 'success' ? Polished.colors.success : Polished.colors.error}
           />
-          <Text style={[styles.noticeText, { color: notice.type === 'success' ? Polish.colors.success : Polish.colors.error }]}>
+          <Text style={[styles.noticeText, { color: notice.type === 'success' ? Polished.colors.success : Polished.colors.error }]}>
             {notice.text}
           </Text>
         </View>
@@ -220,7 +220,7 @@ export default function ProfileEditor() {
           <Text style={styles.heroTitle}>{fullName || 'Profile'}</Text>
           {form.location ? (
             <View style={styles.heroLocationRow}>
-              <Ionicons name="location-outline" size={13} color={Polish.colors.textMuted} />
+              <Ionicons name="location-outline" size={13} color={Polished.colors.textMuted} />
               <Text style={styles.heroLocation}>{form.location}</Text>
             </View>
           ) : null}
@@ -252,7 +252,7 @@ export default function ProfileEditor() {
                     onPress={() => toggleRole(role)}
                     activeOpacity={0.8}
                   >
-                    <Ionicons name={icon} size={20} color={on ? '#fff' : Polish.colors.textSecondary} />
+                    <Ionicons name={icon} size={20} color={on ? '#fff' : Polished.colors.textSecondary} />
                     <Text style={[styles.roleChipText, on && styles.roleChipTextSelected]}>{label}</Text>
                   </TouchableOpacity>
                 );
@@ -306,7 +306,7 @@ export default function ProfileEditor() {
             <>
               <Text style={fs.hint}>Tap + to add hours for a day. Tap a time to change it.</Text>
               <ScheduleEditor schedule={form.schedule} onChange={(s) => set('schedule', s)} />
-              <View style={{ height: Polish.spacing.lg }} />
+              <View style={{ height: Polished.spacing.lg }} />
               <FieldError message={errors.availability} />
             </>
           ) : (
@@ -392,7 +392,7 @@ export default function ProfileEditor() {
 
       {section('gcal', 'Calendar', googleConnected ? 'Connected' : 'Not connected', googleConnected ? (
         <View style={styles.calendarRow}>
-          <Ionicons name="checkmark-circle" size={18} color={Polish.colors.success} />
+          <Ionicons name="checkmark-circle" size={18} color={Polished.colors.success} />
           <Text style={styles.calendarConnectedText}>Connected</Text>
           {editing && (
             <TouchableOpacity onPress={handleCalendarDisconnect} style={styles.disconnectButton}>
@@ -416,13 +416,13 @@ export default function ProfileEditor() {
       {!editing && isCustomer && !isTech && (
         <TouchableOpacity style={[fs.card, fs.row, styles.becomeTechCard]} onPress={() => router.push('/apply')} activeOpacity={0.85}>
           <View style={styles.becomeTechIcon}>
-            <Ionicons name="sparkles" size={22} color={Polish.colors.primary} />
+            <Ionicons name="sparkles" size={22} color={Polished.colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[fs.label, { marginBottom: 2 }]}>Become a Nail Tech</Text>
-            <Text style={fs.muted}>Apply to offer your services on Polish</Text>
+            <Text style={fs.muted}>Apply to offer your services on Polished</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Polish.colors.textMuted} />
+          <Ionicons name="chevron-forward" size={18} color={Polished.colors.textMuted} />
         </TouchableOpacity>
       )}
 
@@ -434,7 +434,7 @@ export default function ProfileEditor() {
 function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={16} color={Polish.colors.textMuted} />
+      <Ionicons name={icon} size={16} color={Polished.colors.textMuted} />
       <Text style={styles.infoRowText}>{text}</Text>
     </View>
   );
@@ -453,55 +453,55 @@ function ReadOnlyChips({ items, empty }: { items: string[]; empty: string }) {
   );
 }
 
-const c = Polish.colors;
+const c = Polished.colors;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
-  content: { paddingHorizontal: Polish.spacing.xl, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: Polish.spacing.xl },
+  content: { paddingHorizontal: Polished.spacing.xl, paddingBottom: 40 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: Polished.spacing.xl },
   headerSide: { width: 50, alignItems: 'flex-end' },
-  headerTitle: { ...Polish.typography.title, color: c.text, flex: 1, textAlign: 'center' },
-  editButton: { ...Polish.typography.button, color: c.primary },
-  notice: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.sm, padding: Polish.spacing.md, borderRadius: Polish.radius.md, marginBottom: Polish.spacing.lg, borderWidth: 1 },
+  headerTitle: { ...Polished.typography.title, color: c.text, flex: 1, textAlign: 'center' },
+  editButton: { ...Polished.typography.button, color: c.primary },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.sm, padding: Polished.spacing.md, borderRadius: Polished.radius.md, marginBottom: Polished.spacing.lg, borderWidth: 1 },
   noticeSuccess: { backgroundColor: c.success + '15', borderColor: c.success + '40' },
   noticeError: { backgroundColor: c.error + '15', borderColor: c.error + '40' },
-  noticeText: { ...Polish.typography.caption, fontWeight: '500', flex: 1 },
-  hero: { alignItems: 'center', gap: Polish.spacing.sm, paddingVertical: Polish.spacing.lg, marginBottom: Polish.spacing.lg },
-  heroTitle: { ...Polish.typography.title, color: c.text, textAlign: 'center' },
+  noticeText: { ...Polished.typography.caption, fontWeight: '500', flex: 1 },
+  hero: { alignItems: 'center', gap: Polished.spacing.sm, paddingVertical: Polished.spacing.lg, marginBottom: Polished.spacing.lg },
+  heroTitle: { ...Polished.typography.title, color: c.text, textAlign: 'center' },
   heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroLocation: { ...Polish.typography.caption, color: c.textMuted },
-  heroBadgeRow: { flexDirection: 'row', gap: Polish.spacing.sm },
-  heroBadge: { paddingHorizontal: Polish.spacing.md, paddingVertical: 4, borderRadius: Polish.radius.xl, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+  heroLocation: { ...Polished.typography.caption, color: c.textMuted },
+  heroBadgeRow: { flexDirection: 'row', gap: Polished.spacing.sm },
+  heroBadge: { paddingHorizontal: Polished.spacing.md, paddingVertical: 4, borderRadius: Polished.radius.xl, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
   heroBadgeTech: { backgroundColor: c.primary + '15', borderColor: c.primary + '60' },
-  heroBadgeText: { ...Polish.typography.caption, color: c.textSecondary, fontWeight: '600' },
+  heroBadgeText: { ...Polished.typography.caption, color: c.textSecondary, fontWeight: '600' },
   heroBadgeTextTech: { color: c.primary },
-  section: { padding: Polish.spacing.xl, marginBottom: Polish.spacing.xxl },
-  collapsibleHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Polish.spacing.sm },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Polish.spacing.md },
-  sectionPreview: { ...Polish.typography.caption, color: c.text, marginTop: -Polish.spacing.sm },
-  viewLabel: { fontSize: 12, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: Polish.spacing.lg, marginBottom: Polish.spacing.sm },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.sm, paddingVertical: Polish.spacing.sm, borderBottomWidth: 1, borderBottomColor: c.borderLight },
-  infoRowText: { ...Polish.typography.body, color: c.textSecondary, flex: 1 },
-  readOnlyText: { ...Polish.typography.body, color: c.textSecondary },
-  readOnlyTextMuted: { ...Polish.typography.body, color: c.textMuted },
-  bioText: { ...Polish.typography.body, color: c.textSecondary, lineHeight: 22 },
-  chipRowCompact: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.sm },
-  chipReadOnly: { paddingHorizontal: Polish.spacing.md, paddingVertical: 5, borderRadius: Polish.radius.xl, backgroundColor: c.accent + '25', borderWidth: 1, borderColor: c.accent + '60' },
+  section: { padding: Polished.spacing.xl, marginBottom: Polished.spacing.xxl },
+  collapsibleHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Polished.spacing.sm },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Polished.spacing.md },
+  sectionPreview: { ...Polished.typography.caption, color: c.text, marginTop: -Polished.spacing.sm },
+  viewLabel: { fontSize: 12, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: Polished.spacing.lg, marginBottom: Polished.spacing.sm },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.sm, paddingVertical: Polished.spacing.sm, borderBottomWidth: 1, borderBottomColor: c.borderLight },
+  infoRowText: { ...Polished.typography.body, color: c.textSecondary, flex: 1 },
+  readOnlyText: { ...Polished.typography.body, color: c.textSecondary },
+  readOnlyTextMuted: { ...Polished.typography.body, color: c.textMuted },
+  bioText: { ...Polished.typography.body, color: c.textSecondary, lineHeight: 22 },
+  chipRowCompact: { flexDirection: 'row', flexWrap: 'wrap', gap: Polished.spacing.sm },
+  chipReadOnly: { paddingHorizontal: Polished.spacing.md, paddingVertical: 5, borderRadius: Polished.radius.xl, backgroundColor: c.accent + '25', borderWidth: 1, borderColor: c.accent + '60' },
   chipReadOnlyText: { fontSize: 13, fontWeight: '500', color: c.primaryDark },
-  tierRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Polish.spacing.xs },
-  tierPrice: { ...Polish.typography.bodyMedium, color: c.primary, fontWeight: '700' },
-  portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.sm },
-  portfolioThumb: { width: 100, height: 100, borderRadius: Polish.radius.md, backgroundColor: c.surface },
-  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Polish.spacing.md, marginBottom: Polish.spacing.sm },
-  roleChip: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.sm, paddingVertical: Polish.spacing.md, paddingHorizontal: Polish.spacing.lg, borderRadius: Polish.radius.xl, borderWidth: 2, borderColor: c.border, backgroundColor: c.surface },
+  tierRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Polished.spacing.xs },
+  tierPrice: { ...Polished.typography.bodyMedium, color: c.primary, fontWeight: '700' },
+  portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Polished.spacing.sm },
+  portfolioThumb: { width: 100, height: 100, borderRadius: Polished.radius.md, backgroundColor: c.surface },
+  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Polished.spacing.md, marginBottom: Polished.spacing.sm },
+  roleChip: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.sm, paddingVertical: Polished.spacing.md, paddingHorizontal: Polished.spacing.lg, borderRadius: Polished.radius.xl, borderWidth: 2, borderColor: c.border, backgroundColor: c.surface },
   roleChipSelected: { borderColor: c.primary, backgroundColor: c.primary },
-  roleChipText: { ...Polish.typography.bodyMedium, color: c.textSecondary },
+  roleChipText: { ...Polished.typography.bodyMedium, color: c.textSecondary },
   roleChipTextSelected: { color: '#fff' },
-  calendarRow: { flexDirection: 'row', alignItems: 'center', gap: Polish.spacing.sm },
-  calendarConnectedText: { ...Polish.typography.body, color: c.success, fontWeight: '600', flex: 1 },
-  disconnectButton: { paddingHorizontal: Polish.spacing.md, paddingVertical: Polish.spacing.sm },
-  disconnectText: { ...Polish.typography.caption, color: c.error, fontWeight: '600' },
-  buttonRow: { flexDirection: 'row', gap: Polish.spacing.md, marginBottom: Polish.spacing.lg },
-  becomeTechCard: { gap: Polish.spacing.md, marginBottom: Polish.spacing.xxl, borderColor: c.primary + '40' },
+  calendarRow: { flexDirection: 'row', alignItems: 'center', gap: Polished.spacing.sm },
+  calendarConnectedText: { ...Polished.typography.body, color: c.success, fontWeight: '600', flex: 1 },
+  disconnectButton: { paddingHorizontal: Polished.spacing.md, paddingVertical: Polished.spacing.sm },
+  disconnectText: { ...Polished.typography.caption, color: c.error, fontWeight: '600' },
+  buttonRow: { flexDirection: 'row', gap: Polished.spacing.md, marginBottom: Polished.spacing.lg },
+  becomeTechCard: { gap: Polished.spacing.md, marginBottom: Polished.spacing.xxl, borderColor: c.primary + '40' },
   becomeTechIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: c.primary + '15', alignItems: 'center', justifyContent: 'center' },
 });

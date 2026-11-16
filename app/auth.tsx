@@ -1,4 +1,4 @@
-import { Polish } from '@/constants/theme';
+import { Polished } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui';
 import { auth, db } from '@/firebase/config';
@@ -72,7 +72,7 @@ export default function AuthScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.appName}>Polish</Text>
+        <Text style={styles.appName}>Polished</Text>
         <Text style={styles.title}>Welcome</Text>
         <Text style={styles.subtitle}>
           Sign in with your Cornell Google account to book or offer nail appointments.
@@ -92,10 +92,10 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Polish.colors.background },
-  content: { flex: 1, padding: Polish.spacing.xl, paddingTop: 100, gap: Polish.spacing.md },
-  appName: { ...Polish.typography.caption, color: Polish.colors.primary, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
-  title: { ...Polish.typography.title, color: Polish.colors.text },
-  subtitle: { ...Polish.typography.body, color: Polish.colors.textSecondary, marginBottom: Polish.spacing.xxl, lineHeight: 22 },
-  note: { ...Polish.typography.caption, color: Polish.colors.textMuted, textAlign: 'center' },
+  container: { flex: 1, backgroundColor: Polished.colors.background },
+  content: { flex: 1, padding: Polished.spacing.xl, paddingTop: 100, gap: Polished.spacing.md },
+  appName: { ...Polished.typography.caption, color: Polished.colors.primary, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
+  title: { ...Polished.typography.title, color: Polished.colors.text },
+  subtitle: { ...Polished.typography.body, color: Polished.colors.textSecondary, marginBottom: Polished.spacing.xxl, lineHeight: 22 },
+  note: { ...Polished.typography.caption, color: Polished.colors.textMuted, textAlign: 'center' },
 });
